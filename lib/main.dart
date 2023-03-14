@@ -87,9 +87,7 @@ class _DuplicatesState extends State<Duplicates> {
 
   void _filepicker() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result == null) {
-      print("No file selected");
-    } else {
+    if (result != null) {
       setState(() => {fileLoaded = true});
     }
   }
@@ -100,15 +98,16 @@ class _DuplicatesState extends State<Duplicates> {
     if (!fileLoaded) {
       return Scaffold(
         appBar: AppBar(
-          title: Text('Find and delete duplicates in your Rekordbox library'),
+          title: const Text(
+              'Find and delete duplicates in your Rekordbox library'),
           backgroundColor: Theme.of(context).primaryColor,
         ),
         body: Center(
           child: ElevatedButton(
             onPressed: () => _filepicker(),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: const Text('Import your collection\'s XML'),
+            child: const Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text('Import your collection\'s XML'),
             ),
           ),
         ),
@@ -116,12 +115,20 @@ class _DuplicatesState extends State<Duplicates> {
     } else {
       return Scaffold(
         appBar: AppBar(
-          title: Text('Review the duplicates before deletion'),
+          title: const Text('Review the duplicates before deletion'),
           backgroundColor: Theme.of(context).primaryColor,
         ),
         body: Center(
           child: Column(
-            children: [Icon(Icons.file_open), Text('result.files.single.name')],
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.file_open,
+                color: Theme.of(context).primaryColor,
+              ),
+              const Text(
+                  'result.files.single.name') //Still need to find a way to get the filename here
+            ],
           ),
         ),
       );
