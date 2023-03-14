@@ -122,12 +122,27 @@ class _DuplicatesState extends State<Duplicates> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.file_open,
-                color: Theme.of(context).primaryColor,
+              Column(children: [
+                Icon(
+                  Icons.audio_file_outlined,
+                  color: Theme.of(context).primaryColor,
+                  size: 64,
+                ),
+                const Text(
+                  'result.files.single.name',
+                ),
+              ]),
+
+              ElevatedButton(
+                  child: Text('Find duplicates'),
+                  onPressed: () => {print('placeholder duplicatescript')}),
+              const SizedBox(
+                height: 10,
               ),
-              const Text(
-                  'result.files.single.name') //Still need to find a way to get the filename here
+              ElevatedButton(
+                child: const Text('Cancel'),
+                onPressed: () => {print('placeholder cancel')},
+              ) //Still need to find a way to get the filename here
             ],
           ),
         ),
