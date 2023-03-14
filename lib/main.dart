@@ -90,30 +90,47 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class Duplicates extends StatelessWidget {
+class Duplicates extends StatefulWidget {
   @override
+  State<Duplicates> createState() => _DuplicatesState();
+}
+
+class _DuplicatesState extends State<Duplicates> {
+  bool fileLoaded = false;
+
+  @override
+  void _filepicker() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result == null) {
+      print("No file selected");
+    } else {
+      print(result.files.single.name);
+    }
+  }
+
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Find and delete duplicates in your Rekordbox library'),
-        backgroundColor: Theme.of(context).primaryColor,
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            FilePickerResult? result = await FilePicker.platform.pickFiles();
-            if (result == null) {
-              print("No file selected");
-            } else {
-              print(result.files.single.name);
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: const Text('Import your collection\'s XML'),
+    Widget page;
+    if (!fileLoaded) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Find and delete duplicates in your Rekordbox library'),
+          backgroundColor: Theme.of(context).primaryColor,
+        ),
+        body: Center(
+          child: ElevatedButton(
+            onPressed: () => _filepicker(),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: const Text('Import your collection\'s XML'),
+            ),
           ),
         ),
-      ),
-    );
+      );
+    } else {
+      return AppBar(
+        title: Text('Review the duplicates before deletion'),
+        backgroundColor: Theme.of(context).primaryColor,
+      );
+    }
   }
 }
