@@ -51,28 +51,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    final _TabPages = <Widget>[
-      // const Center(child: Icon(Icons.copy, size: 64, color: Colors.amber)),
-      Duplicates(),
-      const Center(child: Icon(Icons.recycling, size: 64, color: Colors.green))
-    ];
-    final _Tabs = <Tab>[
-      const Tab(icon: Icon(Icons.copy), text: 'Duplicates'),
-      const Tab(icon: Icon(Icons.recycling), text: 'Garbage Collection')
-    ];
-    return DefaultTabController(
-      length: _Tabs.length,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Rekordbox Fix'),
-          bottom: TabBar(
-            tabs: _Tabs,
-          ),
-        ),
-        body: TabBarView(
-          children: _TabPages,
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Rekordbox Fix'),
       ),
+      body: Duplicates(),
     );
   }
 }
@@ -98,8 +81,15 @@ class _DuplicatesState extends State<Duplicates> {
     if (!fileLoaded) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text(
-              'Find and delete duplicates in your Rekordbox library'),
+          title: Container(
+            constraints:
+                BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
+            child: const Text(
+                softWrap: true,
+                overflow: TextOverflow
+                    .visible, //TODO MAYBE THIS ISNT THE RIGHT PLACE FOR THIS TEXT
+                'First you\'ll need to import your collection\'s XML so that it can be scanned'),
+          ),
           backgroundColor: Theme.of(context).primaryColor,
         ),
         body: Center(
@@ -134,14 +124,18 @@ class _DuplicatesState extends State<Duplicates> {
               ]),
 
               ElevatedButton(
-                  child: Text('Find duplicates'),
+                  child: const Text('Find duplicates'),
                   onPressed: () => {print('placeholder duplicatescript')}),
               const SizedBox(
                 height: 10,
               ),
               ElevatedButton(
                 child: const Text('Cancel'),
-                onPressed: () => {print('placeholder cancel')},
+                onPressed: () => {
+                  setState(
+                    () => fileLoaded = false,
+                  )
+                },
               ) //Still need to find a way to get the filename here
             ],
           ),
