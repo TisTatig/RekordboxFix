@@ -77,7 +77,6 @@ class _DuplicatesState extends State<Duplicates> {
 
   @override
   Widget build(BuildContext context) {
-    Widget page;
     if (!fileLoaded) {
       return Scaffold(
         appBar: AppBar(
@@ -104,10 +103,6 @@ class _DuplicatesState extends State<Duplicates> {
       );
     } else {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Review the duplicates before deletion'),
-          backgroundColor: Theme.of(context).primaryColor,
-        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
