@@ -61,6 +61,8 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class Duplicates extends StatefulWidget {
+  const Duplicates({super.key});
+
   @override
   State<Duplicates> createState() => _DuplicatesState();
 }
@@ -78,64 +80,72 @@ class _DuplicatesState extends State<Duplicates> {
   @override
   Widget build(BuildContext context) {
     if (!fileLoaded) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Container(
-            constraints:
-                BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
-            child: const Text(
-                softWrap: true,
-                overflow: TextOverflow
-                    .visible, //TODO MAYBE THIS ISNT THE RIGHT PLACE FOR THIS TEXT
-                'First you\'ll need to import your collection\'s XML so that it can be scanned'),
-          ),
-          backgroundColor: Theme.of(context).primaryColor,
-        ),
-        body: Center(
-          child: ElevatedButton(
-            onPressed: () => _filepicker(),
-            child: const Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text('Import your collection\'s XML'),
-            ),
-          ),
-        ),
-      );
+      return homeWithoutFile(context);
     } else {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(children: [
-                Icon(
-                  Icons.audio_file_outlined,
-                  color: Theme.of(context).primaryColor,
-                  size: 64,
-                ),
-                const Text(
-                  'result.files.single.name',
-                ),
-              ]),
+      return homeWithFile(context);
+    }
+  }
 
-              ElevatedButton(
-                  child: const Text('Find duplicates'),
-                  onPressed: () => {print('placeholder duplicatescript')}),
-              const SizedBox(
-                height: 10,
+  Scaffold homeWithFile(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Column(children: [
+              Icon(
+                Icons.audio_file_outlined,
+                color: Theme.of(context).primaryColor,
+                size: 64,
               ),
-              ElevatedButton(
-                child: const Text('Cancel'),
-                onPressed: () => {
-                  setState(
-                    () => fileLoaded = false,
-                  )
-                },
-              ) //Still need to find a way to get the filename here
-            ],
+              const Text(
+                'result.files.single.name',
+              ),
+            ]),
+
+            ElevatedButton(
+                child: const Text('Find duplicates'),
+                onPressed: () => {print('placeholder duplicatescript')}),
+            const SizedBox(
+              height: 10,
+            ),
+            ElevatedButton(
+              child: const Text('Cancel'),
+              onPressed: () => {
+                setState(
+                  () => fileLoaded = false,
+                )
+              },
+            ) //Still need to find a way to get the filename here
+          ],
+        ),
+      ),
+    );
+  }
+
+  Scaffold homeWithoutFile(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Container(
+          constraints:
+              BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
+          child: const Text(
+              softWrap: true,
+              overflow: TextOverflow
+                  .visible, //TODO MAYBE THIS ISNT THE RIGHT PLACE FOR THIS TEXT
+              'First you\'ll need to import your collection\'s XML so that it can be scanned'),
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () => _filepicker(),
+          child: const Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Text('Import your collection\'s XML'),
           ),
         ),
-      );
-    }
+      ),
+    );
   }
 }
