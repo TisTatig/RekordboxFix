@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/rendering.dart';
 
 void main() {
   runApp(const MyApp());
@@ -69,12 +70,14 @@ class Duplicates extends StatefulWidget {
 
 class _DuplicatesState extends State<Duplicates> {
   bool fileLoaded = false;
+  FilePickerResult? collectionXML;
 
-  void _filepicker() async {
+  Future<FilePickerResult?> _filepicker() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
       setState(() => {fileLoaded = true});
     }
+    return result;
   }
 
   @override
@@ -98,9 +101,7 @@ class _DuplicatesState extends State<Duplicates> {
                 color: Theme.of(context).primaryColor,
                 size: 64,
               ),
-              const Text(
-                'result.files.single.name',
-              ),
+              Text(collectionXML?.files.single.name ?? 'No File Selected'),
             ]),
 
             ElevatedButton(
@@ -139,7 +140,7 @@ class _DuplicatesState extends State<Duplicates> {
       ),
       body: Center(
         child: ElevatedButton(
-          onPressed: () => _filepicker(),
+          onPressed: () async => {collectionXML = await _filepicker()},
           child: const Padding(
             padding: EdgeInsets.all(20.0),
             child: Text('Import your collection\'s XML'),
