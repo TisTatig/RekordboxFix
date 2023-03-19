@@ -126,25 +126,20 @@ class _DuplicatesState extends State<Duplicates> {
 
   Scaffold homeWithoutFile(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Container(
-          constraints:
-              BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
-          child: const Text(
-              softWrap: true,
-              overflow: TextOverflow
-                  .visible, //TODO MAYBE THIS ISNT THE RIGHT PLACE FOR THIS TEXT
-              'First you\'ll need to import your collection\'s XML so that it can be scanned'),
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
-      ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () async => {collectionXML = await _filepicker()},
-          child: const Padding(
-            padding: EdgeInsets.all(20.0),
-            child: Text('Import your collection\'s XML'),
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Import your collection\'s XML'),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () async => {collectionXML = await _filepicker()},
+              child: const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text('Import'),
+              ),
+            ),
+          ],
         ),
       ),
     );
