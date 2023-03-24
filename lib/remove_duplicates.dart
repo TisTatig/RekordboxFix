@@ -4,6 +4,7 @@ import 'dart:io';
 int findDuplicates(File file) {
   final document = XmlDocument.parse(file.readAsStringSync());
   final trackList = document.findAllElements('TRACK');
+  List<String> duplicateList = [];
 
   trackList.forEach((element) {
     var testName = element.getAttribute('Name');
