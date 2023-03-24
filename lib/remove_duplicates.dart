@@ -20,8 +20,9 @@ int findDuplicates(File file) {
     if (matchArtist == testArtist &&
         matchSize == testSize &&
         !(testID == matchID)) {
-      print(
-          'Duplicate found for $testName:\nID One = $testID\nID Two = $matchID\n');
+
+      // IN PROGRESS: Populating the list of duplicates 
+      duplicateList.add("$testName - $testArtist"),
     }
   });
 
