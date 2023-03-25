@@ -98,12 +98,12 @@ class _DuplicatesState extends State<Duplicates> {
     switch (activePhaseIndex) {
       case 0:
         {
-          return homeWithoutFile(context);
+          return homeWithoutFile();
         }
 
       case 1:
         {
-          return homeWithFile(context);
+          return homeWithFile();
         }
 
       /* TODO: CREATE OTHER CASES
@@ -119,84 +119,79 @@ class _DuplicatesState extends State<Duplicates> {
       */
       default:
         {
-          return homeWithoutFile(context);
+          return homeWithoutFile();
         }
     }
   }
-}
 
-class duplicatesOptionChosen extends State<Duplicates> {
-  @override
-  Widget build(BuildContext context) {
+  Widget duplicatesOptionChosen() {
     return MaterialApp(
-        home: Scaffold(
-      appBar: AppBar(
-        title: const Text('List of Duplicates'),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('List of Duplicates'),
+        ),
+        body: ListView(
+          children: [findDuplicates(collectionXML)],
+        ),
       ),
-      body: ListView(children: [
-        findDuplicates(collectionXML)
-      ]), // TODO: collectionXML to a File type
-    ));
+    );
   }
-}
 
-Scaffold homeWithFile(BuildContext context) {
-  return Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Column(children: [
-            Icon(
-              Icons.audio_file_outlined,
-              color: Theme.of(context).primaryColor,
-              size: 64,
+  Widget homeWithFile() {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Column(children: [
+              Icon(
+                Icons.audio_file_outlined,
+                color: Theme.of(context).primaryColor,
+                size: 64,
+              ),
+              Text(collectionXML.path),
+            ]),
+
+            ElevatedButton(
+                child: const Text('Find duplicates'),
+                onPressed: () => {print('placeholder duplicatescript')}),
+            const SizedBox(
+              height: 10,
             ),
-            Text(collectionXML?.files.single.name ?? 'No File Selected'),
-          ]),
-
-          ElevatedButton(
-              child: const Text('Find duplicates'),
-              onPressed: () => {print('placeholder duplicatescript')}),
-          const SizedBox(
-            height: 10,
-          ),
-          ElevatedButton(
-            child: const Text('Cancel'),
-            onPressed: () => {
-              setState(
-                () => {fileLoaded = false},
-              )
-            },
-          ) //Still need to find a way to get the filename here
-        ],
+            ElevatedButton(
+              child: const Text('Cancel'),
+              onPressed: () => {
+                setState(
+                  () => {activePhaseIndex = 0},
+                )
+              },
+            ) //Still need to find a way to get the filename here
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-Scaffold homeWithoutFile(BuildContext context) {
-  return Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('Import your collection\'s XML'),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () async {
-              collectionXML =
-                  await filepicker(); // TODO: Perhaps there should be a state that is set when the buttons are pressed
-              // causing the filepicker to appear, and then when a file is chosen we go to the
-              // third state in which the user can then pick the desired functionality of the app
-            },
-            child: const Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text('Import'),
+  Widget homeWithoutFile() {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Import your collection\'s XML'),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () async {
+                filepicker(); //
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text('Import'),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
