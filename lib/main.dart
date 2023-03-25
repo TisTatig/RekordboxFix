@@ -154,7 +154,9 @@ class _DuplicatesState extends State<Duplicates> {
 
             ElevatedButton(
                 child: const Text('Find duplicates'),
-                onPressed: () => {print('placeholder duplicatescript')}),
+                onPressed: () => {
+                      setState(() => {activePhaseIndex = 2})
+                    }),
             const SizedBox(
               height: 10,
             ),
