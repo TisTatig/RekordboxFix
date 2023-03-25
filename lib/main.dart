@@ -106,12 +106,12 @@ class _DuplicatesState extends State<Duplicates> {
           return homeWithFile();
         }
 
-      /* TODO: CREATE OTHER CASES
-      case 2: 
-      {
-        return duplicatesMenu(context);
-      }
+      case 2:
+        {
+          return duplicatesMenu();
+        }
 
+      /* TODO: CREATE OTHER CASES
       case 3: 
       {
         return garbageMenu(context);
@@ -124,7 +124,7 @@ class _DuplicatesState extends State<Duplicates> {
     }
   }
 
-  Widget duplicatesOptionChosen() {
+  Widget duplicatesMenu() {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
