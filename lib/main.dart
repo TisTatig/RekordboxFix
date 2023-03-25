@@ -1,10 +1,11 @@
 import 'dart:ffi';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'remove_duplicates.dart';
 
-FilePickerResult? collectionXML;
+late File collectionXML;
 List<String> userPhaseList = [
   "noFileLoaded",
   "fileLoaded",
@@ -82,7 +83,10 @@ class Duplicates extends StatefulWidget {
 class _DuplicatesState extends State<Duplicates> {
   Future<FilePickerResult?> filepicker() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
+    // If a legit file is picked collectionXML updates to contain the filepath and the stateIndex is moved
     if (result != null) {
+      String filePath = result.files.single.path ?? 'NoFileSelected';
+      collectionXML = File(filePath);
       setState(() => {activePhaseIndex = 1});
     }
     return result;
