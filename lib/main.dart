@@ -125,13 +125,18 @@ class _DuplicatesState extends State<Duplicates> {
   }
 
   Widget duplicatesMenu() {
+    DataTable duplicateTable = findDuplicates(collectionXML);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('List of Duplicates'),
         ),
-        body: ListView(
-          children: [findDuplicates(collectionXML)],
+        body: ListView.builder(
+          itemBuilder: (BuildContext context, int index) {
+            return const ListTile(title: Text(
+                //duplicateTable[index]
+                "placeholder")); //TODO: duplicateTable needs to become a list or else this won't work
+          },
         ),
       ),
     );

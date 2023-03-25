@@ -45,6 +45,7 @@ DataTable findDuplicates(File file) {
       }
 
       duplicateList.add(duplicateInfo().first);
+      print(duplicateInfo());
     }
   }
 
