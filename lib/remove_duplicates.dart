@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'dart:io';
 
-DataTable findDuplicates(File file) {
+List<ListTile> findDuplicates(File file) {
   final document = XmlDocument.parse(file.readAsStringSync());
   final trackList = document.findAllElements('TRACK');
   // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
   List<DataRow> duplicateList = [];
 
+  /* DEPRECATED Moving towards the usage of a list with ListTiles in it because that works with index
   // Creating the column labels of the DataTable
   List<DataColumn> propertyList = [
     const DataColumn(label: Text('ID')),
     const DataColumn(label: Text('Name')),
     const DataColumn(label: Text('Artist'))
   ];
+*/
 
   //Finding the matches
   for (var element in trackList) {
@@ -27,12 +29,12 @@ DataTable findDuplicates(File file) {
     var matchArtist = element.getAttribute('Artist');
     var matchSize = element.getAttribute('Size');
 
-    // If match is found a new DataRow item is created and appended to the duplicateList
+    // If match is found a new ListTile item is created and appended to the duplicateList
     if (matchArtist == testArtist &&
         matchSize == testSize &&
         !(testID == matchID)) {
-      //Creating the DataRow packages of the found duplicate's info to be used in building the DataTable
-      List<DataRow> duplicateInfo() {
+      //Creating the ListTile packages of the found duplicate's info to be used in building the duplicateList
+      List<ListTile> duplicateInfo() {
         return [
           DataRow(
             cells: [
