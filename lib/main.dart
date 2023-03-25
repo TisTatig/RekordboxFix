@@ -1,9 +1,17 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'remove_duplicates.dart';
 
 FilePickerResult? collectionXML;
-bool fileLoaded = false;
+List<String> userPhaseList = [
+  "noFileLoaded",
+  "fileLoaded",
+  "duplicateFunctionality",
+  "garbageFunctionality"
+];
+int activePhaseIndex = 0;
 
 void main() {
   runApp(const MyApp());
@@ -72,12 +80,10 @@ class Duplicates extends StatefulWidget {
 }
 
 class _DuplicatesState extends State<Duplicates> {
-  bool fileLoaded = false;
-
   Future<FilePickerResult?> filepicker() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
-      setState(() => {fileLoaded = true});
+      setState(() => {activePhaseIndex = 1});
     }
     return result;
   }
@@ -85,10 +91,32 @@ class _DuplicatesState extends State<Duplicates> {
 
   @override
   Widget build(BuildContext context) {
-    if (!fileLoaded) {
-      return homeWithoutFile(context);
-    } else {
-      return homeWithFile(context);
+    switch (activePhaseIndex) {
+      case 0:
+        {
+          return homeWithoutFile(context);
+        }
+
+      case 1:
+        {
+          return homeWithFile(context);
+        }
+
+      /* TODO: CREATE OTHER CASES
+      case 2: 
+      {
+        return duplicatesMenu(context);
+      }
+
+      case 3: 
+      {
+        return garbageMenu(context);
+      }
+      */
+      default:
+        {
+          return homeWithoutFile(context);
+        }
     }
   }
 }
