@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/rendering.dart';
+import 'remove_duplicates.dart';
+
+FilePickerResult? collectionXML;
+bool fileLoaded = false;
 
 void main() {
   runApp(const MyApp());
@@ -56,7 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: const Text('Rekordbox Fix'),
       ),
-      body: Duplicates(),
+      body: const Duplicates(),
     );
   }
 }
@@ -70,15 +73,15 @@ class Duplicates extends StatefulWidget {
 
 class _DuplicatesState extends State<Duplicates> {
   bool fileLoaded = false;
-  FilePickerResult? collectionXML;
 
-  Future<FilePickerResult?> _filepicker() async {
+  Future<FilePickerResult?> filepicker() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
       setState(() => {fileLoaded = true});
     }
     return result;
   }
+// TODO: So now the idea is to somehow update thet state whenever the buttons are pressed
 
   @override
   Widget build(BuildContext context) {
@@ -88,60 +91,80 @@ class _DuplicatesState extends State<Duplicates> {
       return homeWithFile(context);
     }
   }
+}
 
-  Scaffold homeWithFile(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Column(children: [
-              Icon(
-                Icons.audio_file_outlined,
-                color: Theme.of(context).primaryColor,
-                size: 64,
-              ),
-              Text(collectionXML?.files.single.name ?? 'No File Selected'),
-            ]),
-
-            ElevatedButton(
-                child: const Text('Find duplicates'),
-                onPressed: () => {print('placeholder duplicatescript')}),
-            const SizedBox(
-              height: 10,
-            ),
-            ElevatedButton(
-              child: const Text('Cancel'),
-              onPressed: () => {
-                setState(
-                  () => fileLoaded = false,
-                )
-              },
-            ) //Still need to find a way to get the filename here
-          ],
-        ),
+class duplicatesOptionChosen extends State<Duplicates> {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: Scaffold(
+      appBar: AppBar(
+        title: const Text('List of Duplicates'),
       ),
-    );
+      body: ListView(children: [
+        findDuplicates(collectionXML)
+      ]), // TODO: collectionXML to a File type
+    ));
   }
+}
 
-  Scaffold homeWithoutFile(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Import your collection\'s XML'),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async => {collectionXML = await _filepicker()},
-              child: const Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Text('Import'),
-              ),
+Scaffold homeWithFile(BuildContext context) {
+  return Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Column(children: [
+            Icon(
+              Icons.audio_file_outlined,
+              color: Theme.of(context).primaryColor,
+              size: 64,
             ),
-          ],
-        ),
+            Text(collectionXML?.files.single.name ?? 'No File Selected'),
+          ]),
+
+          ElevatedButton(
+              child: const Text('Find duplicates'),
+              onPressed: () => {print('placeholder duplicatescript')}),
+          const SizedBox(
+            height: 10,
+          ),
+          ElevatedButton(
+            child: const Text('Cancel'),
+            onPressed: () => {
+              setState(
+                () => {fileLoaded = false},
+              )
+            },
+          ) //Still need to find a way to get the filename here
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+Scaffold homeWithoutFile(BuildContext context) {
+  return Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Import your collection\'s XML'),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () async {
+              collectionXML =
+                  await filepicker(); // TODO: Perhaps there should be a state that is set when the buttons are pressed
+              // causing the filepicker to appear, and then when a file is chosen we go to the
+              // third state in which the user can then pick the desired functionality of the app
+            },
+            child: const Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text('Import'),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

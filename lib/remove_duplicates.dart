@@ -1,8 +1,9 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'dart:io';
 
-DataTable findDuplicates(File file) {
+DataTable findDuplicates(FilePickerResult file) {
   final document = XmlDocument.parse(file.readAsStringSync());
   final trackList = document.findAllElements('TRACK');
   // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
