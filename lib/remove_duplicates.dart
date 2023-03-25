@@ -1,7 +1,7 @@
 import 'package:xml/xml.dart';
 import 'dart:io';
 
-int findDuplicates(File file) {
+List<String> findDuplicates(File file) {
   final document = XmlDocument.parse(file.readAsStringSync());
   final trackList = document.findAllElements('TRACK');
   List<String> duplicateList = [];
@@ -20,11 +20,10 @@ int findDuplicates(File file) {
     if (matchArtist == testArtist &&
         matchSize == testSize &&
         !(testID == matchID)) {
-
-      // IN PROGRESS: Populating the list of duplicates 
-      duplicateList.add("$testName - $testArtist"),
+      // IN PROGRESS: Populating the list of duplicates
+      duplicateList.add("$testName - $testArtist");
     }
   });
 
-  return 0;
+  return duplicateList;
 }
