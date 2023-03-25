@@ -6,6 +6,13 @@ DataTable findDuplicates(File file) {
   final document = XmlDocument.parse(file.readAsStringSync());
   final trackList = document.findAllElements('TRACK');
   List<DataRow> duplicateList = [];
+  List<DataColumn> propertyList() {
+    return [
+      const DataColumn(label: Text('ID')),
+      const DataColumn(label: Text('Name')),
+      const DataColumn(label: Text('Artist'))
+    ];
+  }
 
   trackList.forEach((element) {
     var testName = element.getAttribute('Name');
@@ -46,7 +53,7 @@ DataTable findDuplicates(File file) {
   });
 
   return DataTable(
-    columns: Properties(),
+    columns: propertyList,
     rows: duplicateList,
   );
 }
