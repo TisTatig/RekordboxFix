@@ -49,7 +49,7 @@ DataTable findDuplicates(File file) {
       }
     },
   );
-
+// Putting together the DataTable from the property list and generated duplicateList
   return DataTable(
     columns: propertyList,
     rows: duplicateList,
