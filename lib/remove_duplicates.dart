@@ -22,21 +22,31 @@ DataTable findDuplicates(File file) {
         matchSize == testSize &&
         !(testID == matchID)) {
       // IN PROGRESS: Populating the list of duplicates
-      // The idea is to use 
-        List<DataRow> duplicateInfo() 
-        { 
-          return [DataRow(cells:[DataCell(Text('$matchID'))])];
-        };
+      // The idea is to use
+      List<DataRow> duplicateInfo() {
+        return [
+          DataRow(cells: [
+            DataCell(Text('$matchID')),
+            DataCell(Text('$testName')),
+            DataCell(Text('$matchArtist')),
+          ])
+        ];
+      }
+
+      duplicateList.add(duplicateInfo().first);
+
+      ;
       // then those lists will be put into a DataTable through:
-      //  when duplicate is found: duplicateInfo.add.duplicateInfo()
+      //  when duplicate is found: duplicateList.add.duplicateInfo()
 
       // When the list is filled create DataTable with:
       // DataTable duplicateTable() { return DataTable(columns: Properties(), rows: duplicateList)}
       // and then return that DataTable
-
-      duplicateList.addAll("$matchID" : "$testName - $testArtist");
     }
   });
 
-  return duplicateList;
+  return DataTable(
+    columns: Properties(),
+    rows: duplicateList,
+  );
 }
