@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'dart:io';
 
-List<ListTile> findDuplicates(File file) {
+List<CheckboxListTile> findDuplicates(File file) {
   final document = XmlDocument.parse(file.readAsStringSync());
   final trackList = document.findAllElements('TRACK');
   // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
@@ -44,15 +44,9 @@ List<ListTile> findDuplicates(File file) {
             activeColor: Colors.green);
       }
 
+      // Appending the listtiles to the duplicateList
       duplicateList.add(duplicateInfo());
-      print(duplicateInfo());
     }
   }
-
-// TODO: Fix to return a list with ListTiles
-// Putting together the DataTable from the property list and generated
-  return DataTable(
-    columns: propertyList,
-    rows: duplicateList,
-  );
+  return duplicateList;
 }

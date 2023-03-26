@@ -125,7 +125,7 @@ class _DuplicatesState extends State<Duplicates> {
   }
 
   Widget duplicatesMenu() {
-    List<ListTile> duplicateTable = findDuplicates(collectionXML);
+    List<CheckboxListTile> duplicateTable = findDuplicates(collectionXML);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
