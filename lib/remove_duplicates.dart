@@ -18,7 +18,10 @@ List<CheckboxListTile> findDuplicates(File file) {
 */
 
   //Finding the matches
-  for (var element in trackList) {
+  for (int i = 0; i < 100; i++) {
+    // TODO: the for loop is still limited here in order to make debugging faster
+    var element = trackList.elementAt(i);
+
     var testName = element.getAttribute('Name');
     var testID = element.getAttribute('TrackID');
     var testArtist = element.getAttribute('Artist');
@@ -30,6 +33,7 @@ List<CheckboxListTile> findDuplicates(File file) {
     var matchSize = element.getAttribute('Size');
 
     // If match is found a new ListTile item is created and appended to the duplicateList
+    // TODO: Implement binary search algorithm
     if (matchArtist == testArtist &&
         matchSize == testSize &&
         !(testID == matchID)) {
