@@ -132,8 +132,7 @@ class _DuplicatesState extends State<Duplicates> {
           title: const Text('List of Duplicates'),
         ),
         body: ListView.builder(
-          // TODO: Dynamically change itemCount, currently limited to 100 for debugging
-          itemCount: 100,
+          itemCount: duplicateTable.length,
           itemBuilder: (BuildContext context, int index) {
             return duplicateTable[index];
           },

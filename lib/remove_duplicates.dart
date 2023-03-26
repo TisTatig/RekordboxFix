@@ -18,7 +18,7 @@ List<CheckboxListTile> findDuplicates(File file) {
 */
 
   //Finding the matches
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i <= 100; i++) {
     // TODO: the for loop is still limited here in order to make debugging faster
     var element = trackList.elementAt(i);
 
@@ -44,7 +44,7 @@ List<CheckboxListTile> findDuplicates(File file) {
         return CheckboxListTile(
             title: Text("$matchID - $testName - $matchArtist"),
             value: false,
-            onChanged: (value) => {print('placeholder $value')},
+            onChanged: (bool? value) => {print('placeholder $value')},
             activeColor: Colors.green);
       }
 
