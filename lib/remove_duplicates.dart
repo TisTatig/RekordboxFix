@@ -6,7 +6,7 @@ List<ListTile> findDuplicates(File file) {
   final document = XmlDocument.parse(file.readAsStringSync());
   final trackList = document.findAllElements('TRACK');
   // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
-  List<DataRow> duplicateList = [];
+  List<CheckboxListTile> duplicateList = [];
 
   /* DEPRECATED Moving towards the usage of a list with ListTiles in it because that works with index
   // Creating the column labels of the DataTable
@@ -33,24 +33,23 @@ List<ListTile> findDuplicates(File file) {
     if (matchArtist == testArtist &&
         matchSize == testSize &&
         !(testID == matchID)) {
-      //Creating the ListTile packages of the found duplicate's info to be used in building the duplicateList
-      List<ListTile> duplicateInfo() {
-        return [
-          DataRow(
-            cells: [
-              DataCell(Text('$matchID')),
-              DataCell(Text('$testName')),
-              DataCell(Text('$matchArtist')),
-            ],
-          )
-        ];
+      //
+      // TODO Making the onChanged cause the track ID and match ID to be appended to a removal table
+      //
+      CheckboxListTile duplicateInfo() {
+        return CheckboxListTile(
+            title: Text("$matchID - $testName - $matchArtist"),
+            value: false,
+            onChanged: (value) => {print('placeholder $value')},
+            activeColor: Colors.green);
       }
 
-      duplicateList.add(duplicateInfo().first);
+      duplicateList.add(duplicateInfo());
       print(duplicateInfo());
     }
   }
 
+// TODO: Fix to return a list with ListTiles
 // Putting together the DataTable from the property list and generated
   return DataTable(
     columns: propertyList,
