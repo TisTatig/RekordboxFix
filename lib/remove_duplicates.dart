@@ -38,8 +38,8 @@ List<CheckboxListTile> findDuplicates(File file) {
         matchSize == testSize &&
         !(testID == matchID)) {
       //
-      // TODO Making the onChanged cause the track ID and match ID to be appended to a removal table
-      //
+      // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
+      // TODO: Store the trackID somewhere else and add playlist information of both duplicates
       CheckboxListTile duplicateInfo() {
         return CheckboxListTile(
             title: Text("$matchID - $testName - $matchArtist"),
