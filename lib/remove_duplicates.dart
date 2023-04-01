@@ -8,15 +8,6 @@ List<CheckboxListTile> findDuplicates(File file) {
   // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
   List<CheckboxListTile> duplicateList = [];
 
-  /* DEPRECATED Moving towards the usage of a list with ListTiles in it because that works with index
-  // Creating the column labels of the DataTable
-  List<DataColumn> propertyList = [
-    const DataColumn(label: Text('ID')),
-    const DataColumn(label: Text('Name')),
-    const DataColumn(label: Text('Artist'))
-  ];
-*/
-
   //Finding the matches
   for (int i = 0; i <= 100; i++) {
     // TODO: the for loop is still limited here in order to make debugging faster
@@ -40,11 +31,17 @@ List<CheckboxListTile> findDuplicates(File file) {
       //
       // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
       // TODO: Store the trackID somewhere else and add playlist information of both duplicates
+
       CheckboxListTile duplicateInfo() {
+        bool checkboxValue = false;
         return CheckboxListTile(
             title: Text("$matchID - $testName - $matchArtist"),
-            value: false,
-            onChanged: (bool? value) => {print('placeholder $value')},
+            value: checkboxValue,
+            onChanged: (bool value) => {
+                  setState(() {
+                    checkboxValue = value;
+                  })
+                },
             activeColor: Colors.green);
       }
 
