@@ -78,33 +78,6 @@ class Duplicates extends StatefulWidget {
   State<Duplicates> createState() => _DuplicatesState();
 }
 
-class DuplicateListTile extends StatelessWidget {
-  const DuplicateListTile({
-    super.key,
-    required this.matchID,
-    required this.name,
-    required this.artist,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String matchID;
-  final String name;
-  final String artist;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return CheckboxListTile(
-      title: Text("$matchID - $name - $artist"),
-      value: value,
-      onChanged: (bool? value) {},
-      activeColor: Colors.green,
-    );
-  }
-}
-
 class _DuplicatesState extends State<Duplicates> {
   Future<FilePickerResult?> filepicker() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -155,6 +128,7 @@ class _DuplicatesState extends State<Duplicates> {
       final trackList = document.findAllElements('TRACK');
       // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
       List<CheckboxListTile> duplicateList = [];
+      CheckboxListTile duplicateTile;
 
       //Finding the matches
       for (int i = 0; i <= 100; i++) {
@@ -175,14 +149,20 @@ class _DuplicatesState extends State<Duplicates> {
         if (matchArtist == testArtist &&
             matchSize == testSize &&
             !(testID == matchID)) {
-          //
+          bool checkboxValue = false;
+          duplicateTile = CheckboxListTile(
+              title: Text("$testName - $testArtist - $matchID"),
+              value: checkboxValue,
+              onChanged: (bool? value) {
+                checkboxValue = value!;
+              });
           // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
           // TODO: Store the trackID somewhere else and add playlist information of both duplicates
 
           //TODO: This thing needs to become an object so it's 'value' can be referenced and changed accordingly in the setState
 
           // Appending the listtiles to the duplicateList
-          // duplicateList.add(duplicateInfo());
+          duplicateList.add(duplicateTile);
         }
       }
       return duplicateList;
