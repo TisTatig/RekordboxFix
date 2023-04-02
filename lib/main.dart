@@ -122,6 +122,9 @@ class _ImportFileScreenState extends State<ImportFileScreen> {
     }
   }
 
+  //  TODO:
+  // class DuplicatesMenu extends StatefulWidget {}
+
   Widget duplicatesMenu() {
     List<CheckboxListTile> findDuplicates(File file) {
       final document = XmlDocument.parse(file.readAsStringSync());
