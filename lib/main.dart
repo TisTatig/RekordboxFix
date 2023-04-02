@@ -66,19 +66,19 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: const Text('Rekordbox Fix'),
       ),
-      body: const Duplicates(),
+      body: const ImportFileScreen(),
     );
   }
 }
 
-class Duplicates extends StatefulWidget {
-  const Duplicates({super.key});
+class ImportFileScreen extends StatefulWidget {
+  const ImportFileScreen({super.key});
 
   @override
-  State<Duplicates> createState() => _DuplicatesState();
+  State<ImportFileScreen> createState() => _ImportFileScreenState();
 }
 
-class _DuplicatesState extends State<Duplicates> {
+class _ImportFileScreenState extends State<ImportFileScreen> {
   Future<FilePickerResult?> filepicker() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     // If a legit file is picked collectionXML updates to contain the filepath and the stateIndex is moved
@@ -154,12 +154,12 @@ class _DuplicatesState extends State<Duplicates> {
               title: Text("$testName - $testArtist - $matchID"),
               value: checkboxValue,
               onChanged: (bool? value) {
-                checkboxValue = value!;
+                setState(() {
+                  checkboxValue = !value!;
+                });
               });
           // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
           // TODO: Store the trackID somewhere else and add playlist information of both duplicates
-
-          //TODO: This thing needs to become an object so it's 'value' can be referenced and changed accordingly in the setState
 
           // Appending the listtiles to the duplicateList
           duplicateList.add(duplicateTile);
