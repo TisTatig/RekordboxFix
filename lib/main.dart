@@ -78,6 +78,33 @@ class Duplicates extends StatefulWidget {
   State<Duplicates> createState() => _DuplicatesState();
 }
 
+class DuplicateListTile extends StatelessWidget {
+  const DuplicateListTile({
+    super.key,
+    required this.matchID,
+    required this.name,
+    required this.artist,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String matchID;
+  final String name;
+  final String artist;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return CheckboxListTile(
+      title: Text("$matchID - $name - $artist"),
+      value: value,
+      onChanged: (bool? value) {},
+      activeColor: Colors.green,
+    );
+  }
+}
+
 class _DuplicatesState extends State<Duplicates> {
   Future<FilePickerResult?> filepicker() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -153,17 +180,9 @@ class _DuplicatesState extends State<Duplicates> {
           // TODO: Store the trackID somewhere else and add playlist information of both duplicates
 
           //TODO: This thing needs to become an object so it's 'value' can be referenced and changed accordingly in the setState
-          CheckboxListTile duplicateInfo() {
-            bool checkboxValue = false;
-            return CheckboxListTile(
-                title: Text("$matchID - $testName - $matchArtist"),
-                value: checkboxValue,
-                onChanged: (bool? value) => {setState(() => {})},
-                activeColor: Colors.green);
-          }
 
           // Appending the listtiles to the duplicateList
-          duplicateList.add(duplicateInfo());
+          // duplicateList.add(duplicateInfo());
         }
       }
       return duplicateList;
