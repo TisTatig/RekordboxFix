@@ -121,54 +121,54 @@ class _ImportFileScreenState extends State<ImportFileScreen> {
         }
     }
   }
+}
 
   //  TODO:
-  // class DuplicatesMenu extends StatefulWidget {}
+  class DuplicatesMenu extends StatefulWidget {
+    @override
+    DuplicatesMenuState createState() => new DuplicatesMenuState();
+  }
 
-  Widget duplicatesMenu() {
-    List<CheckboxListTile> findDuplicates(File file) {
-      final document = XmlDocument.parse(file.readAsStringSync());
+  class DuplicatesMenuState extends State<DuplicatesMenu> {
+    var element, testName, testID, testArtist, testSize, match, matchID, matchArtist, matchSize;
+    
+      final document = XmlDocument.parse(collectionXML.readAsStringSync());
       final trackList = document.findAllElements('TRACK');
-      // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
-      List<CheckboxListTile> duplicateList = [];
-      CheckboxListTile duplicateTile;
 
+
+    @override
+    Widget build(BuildContext context) {
+    
+      // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
+      
       //Finding the matches
       for (int i = 0; i <= 100; i++) {
         // TODO: the for loop is still limited here in order to make debugging faster
-        var element = trackList.elementAt(i);
-        var testName = element.getAttribute('Name');
-        var testID = element.getAttribute('TrackID');
-        var testArtist = element.getAttribute('Artist');
-        var testSize = element.getAttribute('Size');
-        var match = trackList
+          element = trackList.elementAt(i);
+          testName = element.getAttribute('Name');
+          testID = element.getAttribute('TrackID');
+          testArtist = element.getAttribute('Artist');
+          testSize = element.getAttribute('Size');
+          match = trackList
             .lastWhere((element) => element.getAttribute('Name') == testName);
-        var matchID = match.getAttribute('TrackID');
-        var matchArtist = element.getAttribute('Artist');
-        var matchSize = element.getAttribute('Size');
+          matchID = match.getAttribute('TrackID');
+          matchArtist = element.getAttribute('Artist');
+          matchSize = element.getAttribute('Size');
 
         // If match is found a new ListTile item is created and appended to the duplicateList
         // TODO: Implement binary search algorithm
         if (matchArtist == testArtist &&
             matchSize == testSize &&
             !(testID == matchID)) {
-          bool checkboxValue = false;
-          duplicateTile = CheckboxListTile(
-              title: Text("$testName - $testArtist - $matchID"),
-              value: checkboxValue,
-              onChanged: (bool? value) {
-                setState(() {
-                  checkboxValue = !value!;
-                });
-              });
+              duplicateList['$matchID'] = false;
+              
           // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
           // TODO: Store the trackID somewhere else and add playlist information of both duplicates
 
           // Appending the listtiles to the duplicateList
-          duplicateList.add(duplicateTile);
+          
         }
       }
-      return duplicateList;
     }
 
     List<CheckboxListTile> duplicateTable = findDuplicates(collectionXML);
@@ -185,6 +185,7 @@ class _ImportFileScreenState extends State<ImportFileScreen> {
         ),
       ),
     );
+  }
   }
 
   Widget homeWithFile() {
