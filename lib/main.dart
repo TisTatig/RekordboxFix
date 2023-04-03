@@ -101,12 +101,12 @@ class _ImportFileScreenState extends State<ImportFileScreen> {
 
       case 1:
         {
-          return homeWithFile();
+          return HomeWithFile();
         }
 
       case 2:
         {
-          return duplicatesMenu();
+          return DuplicatesMenu();
         }
 
       /* TODO: CREATE OTHER CASES
@@ -123,72 +123,93 @@ class _ImportFileScreenState extends State<ImportFileScreen> {
   }
 }
 
-  //  TODO:
-  class DuplicatesMenu extends StatefulWidget {
-    @override
-    DuplicatesMenuState createState() => new DuplicatesMenuState();
-  }
+//  TODO:
+class DuplicatesMenu extends StatefulWidget {
+  @override
+  DuplicatesMenuState createState() => DuplicatesMenuState();
+}
 
-  class DuplicatesMenuState extends State<DuplicatesMenu> {
-    var element, testName, testID, testArtist, testSize, match, matchID, matchArtist, matchSize;
-    
-      final document = XmlDocument.parse(collectionXML.readAsStringSync());
-      final trackList = document.findAllElements('TRACK');
+class DuplicatesMenuState extends State<DuplicatesMenu> {
+  var element,
+      testName,
+      testID,
+      testArtist,
+      testSize,
+      match,
+      matchID,
+      matchArtist,
+      matchSize;
 
+  final trackList = XmlDocument.parse(collectionXML.readAsStringSync())
+      .findAllElements('TRACK');
+  Map<String, Map> duplicateMap = {};
 
-    @override
-    Widget build(BuildContext context) {
-    
-      // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
-      
-      //Finding the matches
-      for (int i = 0; i <= 100; i++) {
-        // TODO: the for loop is still limited here in order to make debugging faster
-          element = trackList.elementAt(i);
-          testName = element.getAttribute('Name');
-          testID = element.getAttribute('TrackID');
-          testArtist = element.getAttribute('Artist');
-          testSize = element.getAttribute('Size');
-          match = trackList
-            .lastWhere((element) => element.getAttribute('Name') == testName);
-          matchID = match.getAttribute('TrackID');
-          matchArtist = element.getAttribute('Artist');
-          matchSize = element.getAttribute('Size');
+  @override
+  Widget build(BuildContext context) {
+    // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
 
-        // If match is found a new ListTile item is created and appended to the duplicateList
-        // TODO: Implement binary search algorithm
-        if (matchArtist == testArtist &&
-            matchSize == testSize &&
-            !(testID == matchID)) {
-              duplicateList['$matchID'] = false;
-              
-          // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
-          // TODO: Store the trackID somewhere else and add playlist information of both duplicates
+    //Finding the matches
+    for (int i = 0; i <= 100; i++) {
+      // TODO: the for loop is still limited here in order to make debugging faster
+      element = trackList.elementAt(i);
+      testName = element.getAttribute('Name');
+      testID = element.getAttribute('TrackID');
+      testArtist = element.getAttribute('Artist');
+      testSize = element.getAttribute('Size');
+      match = trackList
+          .lastWhere((element) => element.getAttribute('Name') == testName);
+      matchID = match.getAttribute('TrackID');
+      matchArtist = element.getAttribute('Artist');
+      matchSize = element.getAttribute('Size');
 
-          // Appending the listtiles to the duplicateList
-          
-        }
+      // If match is found a new ListTile item is created and appended to the duplicateList
+      // TODO: Implement binary search algorithm
+      if (matchArtist == testArtist &&
+          matchSize == testSize &&
+          !(testID == matchID)) {
+        duplicateMap['$matchID'] = {
+          'Selected': false,
+          'Artist': '$testArtist',
+          'Name': '$testName'
+        };
+
+        // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
+        // TODO: Store the trackID somewhere else and add playlist information of both duplicates
       }
     }
 
-    List<CheckboxListTile> duplicateTable = findDuplicates(collectionXML);
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('List of Duplicates'),
         ),
         body: ListView.builder(
-          itemCount: duplicateTable.length,
+          itemCount: duplicateMap.length,
           itemBuilder: (BuildContext context, int index) {
-            return duplicateTable[index];
+            final matchID = duplicateMap.keys.elementAt(index);
+
+            toggleCheck() {
+              setState(
+                () {
+                  duplicateMap[matchID]?['Selected'] =
+                      !duplicateMap[matchID]?['Selected'];
+                },
+              );
+            }
+
+            return CheckboxListTile(
+              value: duplicateMap[matchID]?['Selected'],
+              onChanged: toggleCheck(),
+            );
           },
         ),
       ),
     );
-  }
-  }
+  }}
 
-  Widget homeWithFile() {
+  class HomeWithFile extends StatelessWidget {
+    @override 
+    Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
@@ -223,7 +244,7 @@ class _ImportFileScreenState extends State<ImportFileScreen> {
         ),
       ),
     );
-  }
+  }}
 
   Widget homeWithoutFile() {
     return Scaffold(
