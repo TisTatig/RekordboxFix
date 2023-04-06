@@ -3,14 +3,12 @@ import 'package:xml/xml.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
-late File collectionXML;
 List<String> userPhaseList = [
   "noFileLoaded",
   "fileLoaded",
   "duplicateFunctionality",
   "garbageFunctionality"
 ];
-int activePhaseIndex = 0;
 
 void main() {
   runApp(const MyApp());
@@ -36,77 +34,50 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rekordbox Fix'),
-      ),
-      body: const ImportFileScreen(),
-    );
-  }
-}
-
-class ImportFileScreen extends StatefulWidget {
-  const ImportFileScreen({super.key});
-
-  @override
-  State<ImportFileScreen> createState() => _ImportFileScreenState();
-}
-
-class _ImportFileScreenState extends State<ImportFileScreen> {
-  Future<FilePickerResult?> filepicker() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-    // If a legit file is picked collectionXML updates to contain the filepath and the stateIndex is moved
-    if (result != null) {
-      String filePath = result.files.single.path ?? 'NoFileSelected';
-      collectionXML = File(filePath);
-      setState(() => {activePhaseIndex = 1});
-    }
-    return result;
-  }
+class HomePageState extends State<HomePage> {
 // TODO: So now the idea is to somehow update thet state whenever the buttons are pressed
+  int activePhaseIndex = 0;
+  late File collectionXML;
 
   @override
   Widget build(BuildContext context) {
     switch (activePhaseIndex) {
       case 0:
         {
-          return homeWithoutFile();
+          return HomeWithoutFile(
+            onSelectFile: (file) {
+              setState(() {
+                activePhaseIndex++;
+                collectionXML = file;
+              });
+            },
+          );
         }
 
       case 1:
         {
-          return HomeWithFile();
+          return HomeWithFile(
+            file: collectionXML,
+          );
         }
 
       case 2:
         {
-          return DuplicatesMenu();
+          return DuplicatesMenu(
+            file: collectionXML,
+          );
         }
 
       /* TODO: CREATE OTHER CASES
@@ -117,19 +88,27 @@ class _ImportFileScreenState extends State<ImportFileScreen> {
       */
       default:
         {
-          return homeWithoutFile();
+          return HomeWithoutFile(
+            onSelectFile: (file) {
+              setState(() {
+                activePhaseIndex++;
+                collectionXML = file;
+              });
+            },
+          );
         }
     }
   }
 }
 
-//  TODO:
-class DuplicatesMenu extends StatefulWidget {
-  @override
-  DuplicatesMenuState createState() => DuplicatesMenuState();
-}
+class DuplicatesMenu extends StatelessWidget {
+  DuplicatesMenu({
+    super.key,
+    required this.file,
+  });
 
-class DuplicatesMenuState extends State<DuplicatesMenu> {
+  final File file;
+
   var element,
       testName,
       testID,
@@ -140,8 +119,8 @@ class DuplicatesMenuState extends State<DuplicatesMenu> {
       matchArtist,
       matchSize;
 
-  final trackList = XmlDocument.parse(collectionXML.readAsStringSync())
-      .findAllElements('TRACK');
+  late final trackList =
+      XmlDocument.parse(file.readAsStringSync()).findAllElements('TRACK');
   Map<String, Map> duplicateMap = {};
 
   @override
@@ -189,12 +168,12 @@ class DuplicatesMenuState extends State<DuplicatesMenu> {
             final matchID = duplicateMap.keys.elementAt(index);
 
             toggleCheck() {
-              setState(
-                () {
-                  duplicateMap[matchID]?['Selected'] =
-                      !duplicateMap[matchID]?['Selected'];
-                },
-              );
+              // setState(
+              //   () {
+              //     duplicateMap[matchID]?['Selected'] =
+              //         !duplicateMap[matchID]?['Selected'];
+              //   },
+              // );
             }
 
             return CheckboxListTile(
@@ -205,11 +184,19 @@ class DuplicatesMenuState extends State<DuplicatesMenu> {
         ),
       ),
     );
-  }}
+  }
+}
 
-  class HomeWithFile extends StatelessWidget {
-    @override 
-    Widget build(BuildContext context) {
+class HomeWithFile extends StatelessWidget {
+  const HomeWithFile({
+    super.key,
+    required this.file,
+  });
+
+  final File file;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
@@ -221,13 +208,12 @@ class DuplicatesMenuState extends State<DuplicatesMenu> {
                 color: Theme.of(context).primaryColor,
                 size: 64,
               ),
-              Text(collectionXML.path),
+              Text(file.path),
             ]),
-
             ElevatedButton(
                 child: const Text('Find duplicates'),
                 onPressed: () => {
-                      setState(() => {activePhaseIndex = 2})
+                      // setState(() => {activePhaseIndex = 2})
                     }),
             const SizedBox(
               height: 10,
@@ -235,18 +221,39 @@ class DuplicatesMenuState extends State<DuplicatesMenu> {
             ElevatedButton(
               child: const Text('Cancel'),
               onPressed: () => {
-                setState(
-                  () => {activePhaseIndex = 0},
-                )
+                // setState(
+                //   () => {activePhaseIndex = 0},
+                // )
               },
-            ) //Still need to find a way to get the filename here
+            )
           ],
         ),
       ),
     );
-  }}
+  }
+}
 
-  Widget homeWithoutFile() {
+class HomeWithoutFile extends StatelessWidget {
+  HomeWithoutFile({
+    required this.onSelectFile,
+    super.key,
+  });
+
+  final void Function(File) onSelectFile;
+
+  Future<void> filepicker() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    // If a legit file is picked collectionXML updates to contain the filepath and the stateIndex is moved
+    final selectedPath = result?.files.single.path;
+    if (selectedPath != null) {
+      final selectedFile = File(selectedPath);
+
+      onSelectFile(selectedFile);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
@@ -256,7 +263,7 @@ class DuplicatesMenuState extends State<DuplicatesMenu> {
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () async {
-                filepicker(); //
+                filepicker();
               },
               child: const Padding(
                 padding: EdgeInsets.all(20.0),
