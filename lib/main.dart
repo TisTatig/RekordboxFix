@@ -167,6 +167,7 @@ class DuplicatesMenu extends StatelessWidget {
           itemBuilder: (BuildContext context, int index) {
             final matchID = duplicateMap.keys.elementAt(index);
 
+            // TODO: Fix this setState bullshit
             toggleCheck() {
               // setState(
               //   () {
@@ -213,6 +214,7 @@ class HomeWithFile extends StatelessWidget {
             ElevatedButton(
                 child: const Text('Find duplicates'),
                 onPressed: () => {
+                      // TODO: Fix this setState bullshit
                       // setState(() => {activePhaseIndex = 2})
                     }),
             const SizedBox(
@@ -221,6 +223,7 @@ class HomeWithFile extends StatelessWidget {
             ElevatedButton(
               child: const Text('Cancel'),
               onPressed: () => {
+                // TODO: Fix this setState bullshit
                 // setState(
                 //   () => {activePhaseIndex = 0},
                 // )
