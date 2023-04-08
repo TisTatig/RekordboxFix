@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'package:xml/xml.dart';
 import 'package:flutter/material.dart';
@@ -98,7 +99,7 @@ class HomePageState extends State<HomePage> {
           return HomeWithoutFile(
             onSelectFile: (file) {
               setState(() {
-                activePhaseIndex++;
+                activePhaseIndex = 1;
                 collectionXML = file;
               });
             },
@@ -108,12 +109,8 @@ class HomePageState extends State<HomePage> {
   }
 }
 
-// TODO: Make this stateful
 class DuplicatesMenu extends StatefulWidget {
-  DuplicatesMenu({
-    super.key,
-    required this.file,
-  });
+  DuplicatesMenu({super.key, required this.file});
 
   final File file;
 
@@ -122,33 +119,36 @@ class DuplicatesMenu extends StatefulWidget {
 }
 
 class _DuplicatesMenuState extends State<DuplicatesMenu> {
-  var element,
-      testName,
-      testID,
-      testArtist,
-      testSize,
-      match,
-      matchID,
-      matchArtist,
-      matchSize;
+  Map<String, Map<dynamic, dynamic>> duplicateMap = {};
 
-  late final trackList = XmlDocument.parse(widget.file.readAsStringSync())
-      .findAllElements('TRACK');
+  @override
+  void initState() {
+    super.initState();
+    var element,
+        testName,
+        testID,
+        testArtist,
+        testSize,
+        match,
+        matchID,
+        matchArtist,
+        matchSize;
 
-  Map<String, Map> duplicateMap = {};
-  void createDuplicateList() {
+    late final trackList = XmlDocument.parse(widget.file.readAsStringSync())
+        .findAllElements('TRACK');
+
     for (int i = 0; i <= 100; i++) {
       // TODO: the for loop is still limited here in order to make debugging faster
       element = trackList.elementAt(i);
-      testName = element.getAttribute('Name');
-      testID = element.getAttribute('TrackID');
-      testArtist = element.getAttribute('Artist');
-      testSize = element.getAttribute('Size');
+      String testName = element.getAttribute('Name');
+      String testID = element.getAttribute('TrackID');
+      String testArtist = element.getAttribute('Artist');
+      String testSize = element.getAttribute('Size');
       match = trackList
           .lastWhere((element) => element.getAttribute('Name') == testName);
-      matchID = match.getAttribute('TrackID');
-      matchArtist = element.getAttribute('Artist');
-      matchSize = element.getAttribute('Size');
+      String matchID = match.getAttribute('TrackID');
+      String matchArtist = element.getAttribute('Artist');
+      String matchSize = element.getAttribute('Size');
 
       // If match is found a new ListTile item is created and appended to the duplicateList
       // TODO: Implement binary search algorithm
@@ -157,46 +157,66 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           !(testID == matchID)) {
         duplicateMap[matchID] = {
           'Selected': false,
-          'Artist': '$testArtist',
-          'Name': '$testName'
+          'Artist': testArtist,
+          'Name': testName
         };
       }
     }
-
-    // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
-    // TODO: Store the trackID somewhere else and add playlist information of both duplicates
   }
 
   @override
   Widget build(BuildContext context) {
-    // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
-
-    //Finding the matches
-
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('List of Duplicates'),
         ),
         body: ListView.builder(
-          itemCount: duplicateMap.length,
-          itemBuilder: (BuildContext context, int index) {
-            final matchID = duplicateMap.keys.elementAt(index);
+            itemCount: duplicateMap.length,
+            itemBuilder: (BuildContext context, int index) {
+              final matchID = duplicateMap.keys.elementAt(index);
 
-            return CheckboxListTile(
+              return CheckboxListTile(
                 value: duplicateMap[matchID]?['Selected'],
                 onChanged: (bool? value) {
-                  setState(() {
-                    value = !duplicateMap[matchID]?['Selected'];
-                    duplicateMap[matchID]?['Selected'] = value;
-                  });
-
-                  // TODO: get the function out of setstate and call setstate below it for the refresh
+                  value = !duplicateMap[matchID]?['Selected'];
+                  duplicateMap[matchID]?['Selected'] = value;
+                  setState(() => {});
                 },
                 title: Text(duplicateMap[matchID]?['Name'] +
                     " - " +
-                    duplicateMap[matchID]?['Artist']));
-          },
+                    duplicateMap[matchID]?['Artist']),
+              );
+            }),
+        bottomNavigationBar: BottomAppBar(
+          child: Row(
+            children: [
+              ElevatedButton(
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    print('Delete Placeholder');
+                  },
+                  child: const Text('Delete')),
+              ElevatedButton(
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    print('Cancel Placeholder');
+                  },
+                  child: const Text('Cancel')),
+            ],
+          ),
         ),
       ),
     );
@@ -231,19 +251,12 @@ class HomeWithFile extends StatelessWidget {
             ]),
             ElevatedButton(
                 child: const Text('Find duplicates'),
-                onPressed: () => {
-                      // TODO: Fix this setState bullshit
-                      findDuplicates()
-                    }),
+                onPressed: () => {findDuplicates()}),
             const SizedBox(
               height: 10,
             ),
             ElevatedButton(
-                child: const Text('Cancel'),
-                onPressed: () => {
-                      // TODO: Fix this setState bullshit
-                      onCancel()
-                    })
+                child: const Text('Cancel'), onPressed: () => {onCancel()})
           ],
         ),
       ),
