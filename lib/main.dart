@@ -59,7 +59,7 @@ class HomePageState extends State<HomePage> {
           return HomeWithoutFile(
             onSelectFile: (file) {
               setState(() {
-                activePhaseIndex++;
+                activePhaseIndex = 1;
                 collectionXML = file;
               });
             },
@@ -69,15 +69,22 @@ class HomePageState extends State<HomePage> {
       case 1:
         {
           return HomeWithFile(
-            file: collectionXML,
-          );
+              file: collectionXML,
+              onCancel: () {
+                setState(() {
+                  activePhaseIndex = 0;
+                });
+              },
+              findDuplicates: () {
+                setState(() {
+                  activePhaseIndex = 2;
+                });
+              });
         }
 
       case 2:
         {
-          return DuplicatesMenu(
-            file: collectionXML,
-          );
+          return DuplicatesMenu(file: collectionXML);
         }
 
       /* TODO: CREATE OTHER CASES
@@ -101,7 +108,8 @@ class HomePageState extends State<HomePage> {
   }
 }
 
-class DuplicatesMenu extends StatelessWidget {
+// TODO: Make this stateful
+class DuplicatesMenu extends StatefulWidget {
   DuplicatesMenu({
     super.key,
     required this.file,
@@ -109,6 +117,11 @@ class DuplicatesMenu extends StatelessWidget {
 
   final File file;
 
+  @override
+  State<DuplicatesMenu> createState() => _DuplicatesMenuState();
+}
+
+class _DuplicatesMenuState extends State<DuplicatesMenu> {
   var element,
       testName,
       testID,
@@ -119,15 +132,11 @@ class DuplicatesMenu extends StatelessWidget {
       matchArtist,
       matchSize;
 
-  late final trackList =
-      XmlDocument.parse(file.readAsStringSync()).findAllElements('TRACK');
+  late final trackList = XmlDocument.parse(widget.file.readAsStringSync())
+      .findAllElements('TRACK');
+
   Map<String, Map> duplicateMap = {};
-
-  @override
-  Widget build(BuildContext context) {
-    // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
-
-    //Finding the matches
+  void createDuplicateList() {
     for (int i = 0; i <= 100; i++) {
       // TODO: the for loop is still limited here in order to make debugging faster
       element = trackList.elementAt(i);
@@ -146,16 +155,23 @@ class DuplicatesMenu extends StatelessWidget {
       if (matchArtist == testArtist &&
           matchSize == testSize &&
           !(testID == matchID)) {
-        duplicateMap['$matchID'] = {
+        duplicateMap[matchID] = {
           'Selected': false,
           'Artist': '$testArtist',
           'Name': '$testName'
         };
-
-        // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
-        // TODO: Store the trackID somewhere else and add playlist information of both duplicates
       }
     }
+
+    // TODO: Making the onChanged cause the track ID and match ID to be appended to a removal table
+    // TODO: Store the trackID somewhere else and add playlist information of both duplicates
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Creating empty list to house the info of the duplicates in DataRow form for the DataTable
+
+    //Finding the matches
 
     return MaterialApp(
       home: Scaffold(
@@ -167,20 +183,19 @@ class DuplicatesMenu extends StatelessWidget {
           itemBuilder: (BuildContext context, int index) {
             final matchID = duplicateMap.keys.elementAt(index);
 
-            // TODO: Fix this setState bullshit
-            toggleCheck() {
-              // setState(
-              //   () {
-              //     duplicateMap[matchID]?['Selected'] =
-              //         !duplicateMap[matchID]?['Selected'];
-              //   },
-              // );
-            }
-
             return CheckboxListTile(
-              value: duplicateMap[matchID]?['Selected'],
-              onChanged: toggleCheck(),
-            );
+                value: duplicateMap[matchID]?['Selected'],
+                onChanged: (bool? value) {
+                  setState(() {
+                    value = !duplicateMap[matchID]?['Selected'];
+                    duplicateMap[matchID]?['Selected'] = value;
+                  });
+
+                  // TODO: get the function out of setstate and call setstate below it for the refresh
+                },
+                title: Text(duplicateMap[matchID]?['Name'] +
+                    " - " +
+                    duplicateMap[matchID]?['Artist']));
           },
         ),
       ),
@@ -189,12 +204,15 @@ class DuplicatesMenu extends StatelessWidget {
 }
 
 class HomeWithFile extends StatelessWidget {
-  const HomeWithFile({
-    super.key,
-    required this.file,
-  });
+  const HomeWithFile(
+      {super.key,
+      required this.file,
+      required this.onCancel,
+      required this.findDuplicates});
 
   final File file;
+  final void Function() onCancel;
+  final void Function() findDuplicates;
 
   @override
   Widget build(BuildContext context) {
@@ -215,20 +233,17 @@ class HomeWithFile extends StatelessWidget {
                 child: const Text('Find duplicates'),
                 onPressed: () => {
                       // TODO: Fix this setState bullshit
-                      // setState(() => {activePhaseIndex = 2})
+                      findDuplicates()
                     }),
             const SizedBox(
               height: 10,
             ),
             ElevatedButton(
-              child: const Text('Cancel'),
-              onPressed: () => {
-                // TODO: Fix this setState bullshit
-                // setState(
-                //   () => {activePhaseIndex = 0},
-                // )
-              },
-            )
+                child: const Text('Cancel'),
+                onPressed: () => {
+                      // TODO: Fix this setState bullshit
+                      onCancel()
+                    })
           ],
         ),
       ),
