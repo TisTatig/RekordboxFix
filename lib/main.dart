@@ -85,7 +85,13 @@ class HomePageState extends State<HomePage> {
 
       case 2:
         {
-          return DuplicatesMenu(file: collectionXML);
+          return DuplicatesMenu(
+              file: collectionXML,
+              onCancel: () {
+                setState(() {
+                  activePhaseIndex = 1;
+                });
+              });
         }
 
       /* TODO: CREATE OTHER CASES
@@ -110,9 +116,10 @@ class HomePageState extends State<HomePage> {
 }
 
 class DuplicatesMenu extends StatefulWidget {
-  DuplicatesMenu({super.key, required this.file});
+  DuplicatesMenu({super.key, required this.file, required this.onCancel});
 
   final File file;
+  final void Function() onCancel;
 
   @override
   State<DuplicatesMenu> createState() => _DuplicatesMenuState();
@@ -212,7 +219,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
                     ),
                   ),
                   onPressed: () {
-                    print('Cancel Placeholder');
+                    widget.onCancel();
                   },
                   child: const Text('Cancel')),
             ],
