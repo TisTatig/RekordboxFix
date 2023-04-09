@@ -48,7 +48,6 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-// TODO: So now the idea is to somehow update thet state whenever the buttons are pressed
   int activePhaseIndex = 0;
   late File collectionXML;
 
@@ -116,7 +115,7 @@ class HomePageState extends State<HomePage> {
 }
 
 class DuplicatesMenu extends StatefulWidget {
-  DuplicatesMenu({super.key, required this.file, required this.onCancel});
+  const DuplicatesMenu({super.key, required this.file, required this.onCancel});
 
   final File file;
   final void Function() onCancel;
@@ -131,41 +130,36 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
   @override
   void initState() {
     super.initState();
-    var element,
-        testName,
-        testID,
-        testArtist,
-        testSize,
-        match,
-        matchID,
-        matchArtist,
-        matchSize;
+    var element, match;
+    var testName, testID, testArtist, testSize, matchID, matchArtist, matchSize;
 
     late final trackList = XmlDocument.parse(widget.file.readAsStringSync())
-        .findAllElements('TRACK');
+        .findAllElements('TRACK')
+        .first
+        .siblings;
 
-    for (int i = 0; i <= 100; i++) {
-      // TODO: the for loop is still limited here in order to make debugging faster
+// TODO: Streamline this process
+    for (int i = 0; i < trackList.length; i++) {
       element = trackList.elementAt(i);
-      String testName = element.getAttribute('Name');
-      String testID = element.getAttribute('TrackID');
-      String testArtist = element.getAttribute('Artist');
-      String testSize = element.getAttribute('Size');
+      testName = element?.getAttribute('Name');
+      testID = element?.getAttribute('TrackID');
+      testArtist = element?.getAttribute('Artist');
+      testSize = element?.getAttribute('Size');
       match = trackList
           .lastWhere((element) => element.getAttribute('Name') == testName);
-      String matchID = match.getAttribute('TrackID');
-      String matchArtist = element.getAttribute('Artist');
-      String matchSize = element.getAttribute('Size');
+      matchID = match?.getAttribute('TrackID');
+      matchArtist = element?.getAttribute('Artist');
+      matchSize = element?.getAttribute('Size');
 
       // If match is found a new ListTile item is created and appended to the duplicateList
-      // TODO: Implement binary search algorithm
       if (matchArtist == testArtist &&
           matchSize == testSize &&
           !(testID == matchID)) {
         duplicateMap[matchID] = {
           'Selected': false,
           'Artist': testArtist,
-          'Name': testName
+          'Name': testName,
+          'Original': testID
         };
       }
     }
@@ -176,18 +170,19 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('List of Duplicates'),
-        ),
+            title:
+                Center(child: Text('${duplicateMap.length} duplicates found'))),
         body: ListView.builder(
             itemCount: duplicateMap.length,
             itemBuilder: (BuildContext context, int index) {
               final matchID = duplicateMap.keys.elementAt(index);
+              Map<dynamic, dynamic>? matchInfo = duplicateMap[matchID];
 
               return CheckboxListTile(
-                value: duplicateMap[matchID]?['Selected'],
+                value: matchInfo?['Selected'],
                 onChanged: (bool? value) {
-                  value = !duplicateMap[matchID]?['Selected'];
-                  duplicateMap[matchID]?['Selected'] = value;
+                  value = !matchInfo?['Selected'];
+                  matchInfo?['Selected'] = value;
                   setState(() => {});
                 },
                 title: Text(duplicateMap[matchID]?['Name'] +
@@ -197,6 +192,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
             }),
         bottomNavigationBar: BottomAppBar(
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
                   style: ButtonStyle(
@@ -272,7 +268,7 @@ class HomeWithFile extends StatelessWidget {
 }
 
 class HomeWithoutFile extends StatelessWidget {
-  HomeWithoutFile({
+  const HomeWithoutFile({
     required this.onSelectFile,
     super.key,
   });
