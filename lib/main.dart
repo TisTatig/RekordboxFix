@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io';
 import 'package:xml/xml.dart';
 import 'package:flutter/material.dart';
@@ -24,15 +23,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'RekordBoxFix App',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: const HomePage(),
@@ -125,18 +115,17 @@ class DuplicatesMenu extends StatefulWidget {
 }
 
 class _DuplicatesMenuState extends State<DuplicatesMenu> {
-  Map<String, Map<dynamic, dynamic>> duplicateMap = {};
+  Map<String, String> duplicateMap = {};
+  late final trackList = XmlDocument.parse(widget.file.readAsStringSync())
+      .findAllElements('TRACK')
+      .first
+      .siblings;
 
   @override
   void initState() {
     super.initState();
     var element, match;
     var testName, testID, testArtist, testSize, matchID, matchArtist, matchSize;
-
-    late final trackList = XmlDocument.parse(widget.file.readAsStringSync())
-        .findAllElements('TRACK')
-        .first
-        .siblings;
 
 // TODO: Streamline this process
     for (int i = 0; i < trackList.length; i++) {
@@ -151,20 +140,66 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       matchArtist = element?.getAttribute('Artist');
       matchSize = element?.getAttribute('Size');
 
-      // If match is found a new ListTile item is created and appended to the duplicateList
       if (matchArtist == testArtist &&
           matchSize == testSize &&
           !(testID == matchID)) {
-        duplicateMap[matchID] = {
-          'Selected': false,
-          'Artist': testArtist,
-          'Name': testName,
-          'Original': testID
-        };
+        duplicateMap[testID] = '$matchID';
       }
     }
+    print(match.attributes);
   }
 
+  // TODO: Complete the merge function
+  void mergeDuplicates(Map<String, String> duplicates) {
+    void buildTrack(
+        XmlBuilder builder, Map<String, String> newTrackAttributes) {}
+
+    duplicates.forEach((key, value) {
+      XmlNode firstTrack = trackList
+          .firstWhere((element) => element.getAttribute('TrackID') == key);
+      XmlNode secondTrack = trackList
+          .firstWhere((element) => element.getAttribute('TrackID') == value);
+    });
+    // Get the TRACK element of the key trackID of the map
+    // Get the TRACK element of the value trackID of the map
+    // Build a new XML TRACK node with:
+    // TRACKID = keytrackID
+    // NAME = keytrackname
+    // Artist
+    // Composer
+    // Album
+    // Grouping
+    // Genre
+    // Kind
+    // Size
+    // TotalTime
+    // DiscNumber
+    // TrackNumber
+    // Year
+    // AverageBpm
+    // DateAdded
+    // BitRate
+    // SampleRate
+    // Comments
+    // PlayCount
+    // Rating
+    // Location
+    // Remixer
+    // Tonality
+    // Label
+    // Mix
+    // Colour
+    // For each attribute of the element check if they hold similar values
+    // If not, overwrite/set the attribute of the key trackID to the more complete attribute entry
+    // Check who has the most children and retain the children of that ID
+    //
+    // Build a playlist node with the keytrackID
+    // For every playlist containing the valuetrackID
+    // Append a node containing the keytrackID
+    // Delete the node with the valuetrackID
+  }
+
+  // TODO: widget should return the amount of duplicates and then give the option to merge them
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -172,48 +207,17 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         appBar: AppBar(
             title:
                 Center(child: Text('${duplicateMap.length} duplicates found'))),
-        body: ListView.builder(
-            itemCount: duplicateMap.length,
-            itemBuilder: (BuildContext context, int index) {
-              final matchID = duplicateMap.keys.elementAt(index);
-              Map<dynamic, dynamic>? matchInfo = duplicateMap[matchID];
-
-              return CheckboxListTile(
-                value: matchInfo?['Selected'],
-                onChanged: (bool? value) {
-                  value = !matchInfo?['Selected'];
-                  matchInfo?['Selected'] = value;
-                  setState(() => {});
-                },
-                title: Text(duplicateMap[matchID]?['Name'] +
-                    " - " +
-                    duplicateMap[matchID]?['Artist']),
-              );
-            }),
-        bottomNavigationBar: BottomAppBar(
-          child: Row(
+        body: Center(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                  style: ButtonStyle(
-                    shape: MaterialStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                  ),
                   onPressed: () {
-                    print('Delete Placeholder');
+                    print('Merge Placeholder');
                   },
-                  child: const Text('Delete')),
+                  child: const Text('Merge Duplicates')),
+              const SizedBox(height: 10),
               ElevatedButton(
-                  style: ButtonStyle(
-                    shape: MaterialStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                  ),
                   onPressed: () {
                     widget.onCancel();
                   },
