@@ -154,12 +154,27 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
     void buildTrack(
         XmlBuilder builder, Map<String, String> newTrackAttributes) {}
 
-    duplicates.forEach((key, value) {
-      XmlNode firstTrack = trackList
-          .firstWhere((element) => element.getAttribute('TrackID') == key);
-      XmlNode secondTrack = trackList
-          .firstWhere((element) => element.getAttribute('TrackID') == value);
-    });
+    duplicates.forEach(
+      (key, value) {
+        XmlNode firstTrack = trackList
+            .firstWhere((element) => element.getAttribute('TrackID') == key);
+        XmlNode secondTrack = trackList
+            .firstWhere((element) => element.getAttribute('TrackID') == value);
+
+        // Overwriting the firstTrack info
+        for (int i = 0; i < firstTrack.attributes.length; i++) {
+          // TODO: Fix pseudocode
+          // if (firsttrackattribute better than secondtrackattribute){
+          // firstTrack.setAttribute(firstTrack.attributes[i].name.toString(),
+          // firstTrack.attributes[i].value.toString())};
+          // else {
+          // firstTrack.setAttribute(secondTrack.attributes[i].name.toString(),
+          // secondTrack.attributes[i].value.toString())};
+        }
+
+        // TODO: Checking which of the two tracks have the most hotcues
+      },
+    );
     // Get the TRACK element of the key trackID of the map
     // Get the TRACK element of the value trackID of the map
     // Build a new XML TRACK node with:
