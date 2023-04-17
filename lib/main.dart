@@ -150,7 +150,6 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
     print(match.attributes);
   }
 
-  // TODO: Complete the merge function
   void mergeDuplicates(Map<String, String> duplicates) {
     duplicates.forEach(
       (key, value) {
@@ -205,10 +204,16 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           }
         }
 
-        // Deleting the duplicate track
-        duplicateTrack = secondTrack.getAttribute("Location") as File;
+        // Directing the app to the duplicate file
+        String duplicatePath = secondTrack.getAttribute("Location") as String;
+        // RekordBox prepends a string that we need to get rid of
+        duplicateTrack = File(duplicatePath
+            .replaceAll('file://localhost/', "")
+            .replaceAll("%20", " "));
+        // Deleting the duplicate
         try {
           duplicateTrack.deleteSync();
+          print('File at $duplicateTrack deleted');
         } catch (e) {
           // TODO: Have the program create an error log in which the file locations and errors can be found
           AlertDialog(
@@ -218,13 +223,13 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           );
         }
 
+        // Deleting the duplicate from the collection Xml
         collectionXML.rootElement.children
             .removeWhere((element) => element.getAttribute("trackID") == value);
       },
     );
   }
 
-  // TODO: widget should return the amount of duplicates and then give the option to merge them
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
