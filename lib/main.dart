@@ -228,6 +228,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
             .removeWhere((element) => element.getAttribute("trackID") == value);
       },
     );
+    // TODO: Overwrite the old XML file with new one to fix playlists
   }
 
   @override
