@@ -125,29 +125,35 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
   @override
   void initState() {
     super.initState();
-    var element, match;
-    var testName, testID, testArtist, testSize, matchID, matchArtist, matchSize;
+    XmlElement? element, match;
+    String? testName,
+        testID,
+        testArtist,
+        testSize,
+        matchID,
+        matchArtist,
+        matchSize;
 
 // TODO: Streamline this process
     for (int i = 0; i < trackList.length; i++) {
       element = trackList.elementAt(i);
-      testName = element?.getAttribute('Name');
-      testID = element?.getAttribute('TrackID');
-      testArtist = element?.getAttribute('Artist');
-      testSize = element?.getAttribute('Size');
+      testName = element.getAttribute('Name');
+      testID = element.getAttribute('TrackID');
+      testArtist = element.getAttribute('Artist');
+      testSize = element.getAttribute('Size');
       match = trackList
           .lastWhere((element) => element.getAttribute('Name') == testName);
-      matchID = match?.getAttribute('TrackID');
-      matchArtist = element?.getAttribute('Artist');
-      matchSize = element?.getAttribute('Size');
+      matchID = match.getAttribute('TrackID');
+      matchArtist = element.getAttribute('Artist');
+      matchSize = element.getAttribute('Size');
 
       if (matchArtist == testArtist &&
           matchSize == testSize &&
           !(testID == matchID)) {
-        duplicateMap[testID] = '$matchID';
+        duplicateMap[testID!] = '$matchID';
       }
     }
-    print(match.attributes);
+    print(match?.attributes);
   }
 
   void mergeDuplicates(Map<String, String> duplicates) {
