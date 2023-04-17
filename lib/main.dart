@@ -116,10 +116,11 @@ class DuplicatesMenu extends StatefulWidget {
 
 class _DuplicatesMenuState extends State<DuplicatesMenu> {
   Map<String, String> duplicateMap = {};
-  late final trackList = XmlDocument.parse(widget.file.readAsStringSync())
-      .findAllElements('TRACK')
-      .first
-      .siblings;
+  late XmlDocument collectionXML =
+      XmlDocument.parse(widget.file.readAsStringSync());
+  late final trackList = collectionXML.findAllElements('TRACK');
+  late final playListSection = collectionXML.findAllElements("PLAYLISTS");
+  late File duplicateTrack;
 
   @override
   void initState() {
@@ -151,67 +152,76 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
 
   // TODO: Complete the merge function
   void mergeDuplicates(Map<String, String> duplicates) {
-    void buildTrack(
-        XmlBuilder builder, Map<String, String> newTrackAttributes) {}
-
     duplicates.forEach(
       (key, value) {
-        XmlNode firstTrack = trackList
+        XmlElement firstTrack = trackList
             .firstWhere((element) => element.getAttribute('TrackID') == key);
-        XmlNode secondTrack = trackList
+        XmlElement secondTrack = trackList
             .firstWhere((element) => element.getAttribute('TrackID') == value);
 
-        // Overwriting the firstTrack info
+        // Going over the attributes of both tracks
         for (int i = 0; i < firstTrack.attributes.length; i++) {
-          // TODO: Fix pseudocode
-          // if (firsttrackattribute better than secondtrackattribute){
-          // firstTrack.setAttribute(firstTrack.attributes[i].name.toString(),
-          // firstTrack.attributes[i].value.toString())};
-          // else {
-          // firstTrack.setAttribute(secondTrack.attributes[i].name.toString(),
-          // secondTrack.attributes[i].value.toString())};
+          XmlAttribute firstTrackAtt = firstTrack.attributes[i];
+          XmlAttribute secondTrackAtt = secondTrack.attributes[i];
+
+          // If secondTrack has more complete data it overwrites firstTrackData
+          if (firstTrackAtt.value != secondTrackAtt.value &&
+              firstTrackAtt.value.isEmpty) {
+            firstTrack.setAttribute(secondTrackAtt.name.toString(),
+                secondTrackAtt.value.toString());
+          }
         }
 
-        // TODO: Checking which of the two tracks have the most hotcues
+        // If secondTrack has more hotcues, overwrite the firstTrack hotcues
+        if (firstTrack.children.length < secondTrack.children.length) {
+          for (int childIndex = 0;
+              childIndex < secondTrack.children.length;
+              childIndex++) {
+            // Replace the existing firstTrack hotcues with secondTrack hotcues
+            if (childIndex < firstTrack.children.length) {
+              firstTrack.children[childIndex]
+                  .replace(secondTrack.children[childIndex]);
+              // Append the remaining hotcue children to firstTrack
+            } else {
+              firstTrack.children.add(secondTrack.children[childIndex]);
+            }
+          }
+        }
+        // Loop over playlists in playlist section of xml
+        for (XmlElement playListElement in playListSection) {
+          // Only apply to elements that themselves directly contain tracks (i.e. of type 1 apparently)
+          if (playListElement.getAttribute("Type") == "1") {
+            // Obtain the tracklist they hold in the form of xmlnodes
+            Iterable<XmlNode> playListTrackList = playListElement.children;
+
+            // Replace secondTrack playlist listings (by TrackID) with firstTrack TrackID
+            for (XmlNode playListTrack in playListTrackList) {
+              if (playListTrack.getAttribute("Key") ==
+                  secondTrack.getAttribute("TrackID")) {
+                playListTrack.setAttribute(
+                    "Key", firstTrack.getAttribute("TrackID"));
+              }
+            }
+          }
+        }
+
+        // Deleting the duplicate track
+        duplicateTrack = secondTrack.getAttribute("Location") as File;
+        try {
+          duplicateTrack.deleteSync();
+        } catch (e) {
+          // TODO: Have the program create an error log in which the file locations and errors can be found
+          AlertDialog(
+            title: const Text("File Deletion Error"),
+            content: Text(
+                "The duplicate at ${secondTrack.getAttribute("Location")} could not be deleted ($e). However, the duplicate will still be removed from your RekordBox library.\nYou can run the garbage track collection module to have it removed for you, or else you can always delete the file manually. "),
+          );
+        }
+
+        collectionXML.rootElement.children
+            .removeWhere((element) => element.getAttribute("trackID") == value);
       },
     );
-    // Get the TRACK element of the key trackID of the map
-    // Get the TRACK element of the value trackID of the map
-    // Build a new XML TRACK node with:
-    // TRACKID = keytrackID
-    // NAME = keytrackname
-    // Artist
-    // Composer
-    // Album
-    // Grouping
-    // Genre
-    // Kind
-    // Size
-    // TotalTime
-    // DiscNumber
-    // TrackNumber
-    // Year
-    // AverageBpm
-    // DateAdded
-    // BitRate
-    // SampleRate
-    // Comments
-    // PlayCount
-    // Rating
-    // Location
-    // Remixer
-    // Tonality
-    // Label
-    // Mix
-    // Colour
-    // For each attribute of the element check if they hold similar values
-    // If not, overwrite/set the attribute of the key trackID to the more complete attribute entry
-    // Check who has the most children and retain the children of that ID
-    //
-    // Build a playlist node with the keytrackID
-    // For every playlist containing the valuetrackID
-    // Append a node containing the keytrackID
-    // Delete the node with the valuetrackID
   }
 
   // TODO: widget should return the amount of duplicates and then give the option to merge them
