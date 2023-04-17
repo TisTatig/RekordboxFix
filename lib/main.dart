@@ -238,7 +238,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
             children: [
               ElevatedButton(
                   onPressed: () {
-                    print('Merge Placeholder');
+                    mergeDuplicates(duplicateMap);
                   },
                   child: const Text('Merge Duplicates')),
               const SizedBox(height: 10),
