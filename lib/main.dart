@@ -216,6 +216,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         // Deleting the actual files of the duplicates
         try {
           // TODO: Remove trainingwheel by removing copySync: Now the file is first moved to a TestBin folder
+          // TODO: Replace absolute path with relative one
           duplicateTrack.copySync(
               "C:/Users/krezi/Documents/Visual Studio Code/Rekordbox/rekordboxfix_app/test/testTracks/TestBin/${duplicateTrack.path.substring(duplicateTrack.path.lastIndexOf("/") + 1)}");
           duplicateTrack.deleteSync();
@@ -238,6 +239,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       },
     );
     // TODO: Overwrite the old XML file with new one to fix playlists
+    // TODO: Replace absolute path with relative
     String newCollectionPath =
         "C:/Users/krezi/Documents/Visual Studio Code/Rekordbox/rekordboxfix_app/test/newCollection.xml";
     File(newCollectionPath).writeAsStringSync(collectionXML.toXmlString());
