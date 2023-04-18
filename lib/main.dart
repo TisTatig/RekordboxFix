@@ -153,10 +153,10 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         duplicateMap[testID!] = '$matchID';
       }
     }
-    print(match?.attributes);
   }
 
   void mergeDuplicates(Map<String, String> duplicates) {
+    int duplicateRemovalCount = 0;
     duplicates.forEach(
       (key, value) {
         XmlElement firstTrack = trackList
@@ -192,49 +192,57 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
             }
           }
         }
-        // Loop over playlists in playlist section of xml
-        for (XmlElement playListElement in playListSection) {
-          // Only apply to elements that themselves directly contain tracks (i.e. of type 1 apparently)
-          if (playListElement.getAttribute("Type") == "1") {
-            // Obtain the tracklist they hold in the form of xmlnodes
-            Iterable<XmlNode> playListTrackList = playListElement.children;
 
-            // Replace secondTrack playlist listings (by TrackID) with firstTrack TrackID
-            for (XmlNode playListTrack in playListTrackList) {
-              if (playListTrack.getAttribute("Key") ==
-                  secondTrack.getAttribute("TrackID")) {
-                playListTrack.setAttribute(
-                    "Key", firstTrack.getAttribute("TrackID"));
-              }
-            }
-          }
-        }
+        // Replace secondTrack playlist listings (by TrackID) with firstTrack TrackID
+        collectionXML
+            .findAllElements("PLAYLISTS")
+            .first
+            .findAllElements("TRACK")
+            .where((trackNode) =>
+                trackNode.getAttribute("Key") ==
+                secondTrack.getAttribute("TrackID"))
+            .forEach(
+              (element) => element.setAttribute(
+                  "Key", firstTrack.getAttribute("TrackID")),
+            );
 
         // Directing the app to the duplicate file
         String duplicatePath = secondTrack.getAttribute("Location") as String;
         // RekordBox prepends a string that we need to get rid of
         duplicateTrack = File(duplicatePath
+            // TODO: Check if this holds for all operating systems
             .replaceAll('file://localhost/', "")
             .replaceAll("%20", " "));
-        // Deleting the duplicate
+        // Deleting the actual files of the duplicates
         try {
+          // TODO: Remove trainingwheel by removing copySync: Now the file is first moved to a TestBin folder
+          duplicateTrack.copySync(
+              "C:/Users/krezi/Documents/Visual Studio Code/Rekordbox/rekordboxfix_app/test/testTracks/TestBin/${duplicateTrack.path.substring(duplicateTrack.path.lastIndexOf("/") + 1)}");
           duplicateTrack.deleteSync();
-          print('File at $duplicateTrack deleted');
+          duplicateRemovalCount++;
         } catch (e) {
           // TODO: Have the program create an error log in which the file locations and errors can be found
           AlertDialog(
             title: const Text("File Deletion Error"),
             content: Text(
-                "The duplicate at ${secondTrack.getAttribute("Location")} could not be deleted ($e). However, the duplicate will still be removed from your RekordBox library.\nYou can run the garbage track collection module to have it removed for you, or else you can always delete the file manually. "),
+                "The duplicate at ${secondTrack.getAttribute("Location")} could not be deleted ($e). However, the duplicate will still be removed from your RekordBox library.\nYou can run the garbage track collection module to have it removed for you, or else you can always delete the file manually."),
           );
         }
 
-        // Deleting the duplicate from the collection Xml
-        collectionXML.rootElement.children
-            .removeWhere((element) => element.getAttribute("trackID") == value);
+        // Deleting the Xml nodes of the duplicates
+        collectionXML
+            .findAllElements("COLLECTION")
+            .first
+            .children
+            .removeWhere((element) => element.getAttribute("TrackID") == value);
       },
     );
     // TODO: Overwrite the old XML file with new one to fix playlists
+    String newCollectionPath =
+        "C:/Users/krezi/Documents/Visual Studio Code/Rekordbox/rekordboxfix_app/test/newCollection.xml";
+    File(newCollectionPath).writeAsStringSync(collectionXML.toXmlString());
+
+    // TODO: Make app return alertdialog with the count of removed duplicates
   }
 
   @override
