@@ -40,7 +40,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   int activePhaseIndex = 0;
   late File collectionXML;
-
+// TODO: Replace all those unnecessary "onCancel" functions with navigator.pops
   @override
   Widget build(BuildContext context) {
     switch (activePhaseIndex) {
