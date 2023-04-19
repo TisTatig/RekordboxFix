@@ -80,6 +80,12 @@ class HomePageState extends State<HomePage> {
                 setState(() {
                   activePhaseIndex = 1;
                 });
+              },
+              goBack: (file) {
+                setState(() {
+                  activePhaseIndex = 1;
+                  collectionXML = file;
+                });
               });
         }
 
@@ -105,9 +111,14 @@ class HomePageState extends State<HomePage> {
 }
 
 class DuplicatesMenu extends StatefulWidget {
-  const DuplicatesMenu({super.key, required this.file, required this.onCancel});
+  const DuplicatesMenu(
+      {super.key,
+      required this.file,
+      required this.goBack,
+      required this.onCancel});
 
   final File file;
+  final void Function(File) goBack;
   final void Function() onCancel;
 
   @override
@@ -223,11 +234,25 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           duplicateRemovalCount++;
         } catch (e) {
           // TODO: Have the program create an error log in which the file locations and errors can be found
-          AlertDialog(
-            title: const Text("File Deletion Error"),
-            content: Text(
-                "The duplicate at ${secondTrack.getAttribute("Location")} could not be deleted ($e). However, the duplicate will still be removed from your RekordBox library.\nYou can run the garbage track collection module to have it removed for you, or else you can always delete the file manually."),
-          );
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Container(
+                          color: Theme.of(context).colorScheme.primary,
+                          padding: const EdgeInsets.all(10),
+                          child: const Text("Okay"),
+                        ),
+                      )
+                    ],
+                    title: const Text("File Deletion Error"),
+                    content: Text(
+                        "The duplicate at ${secondTrack.getAttribute("Location")} could not be deleted ($e). However, the duplicate will still be removed from your RekordBox library.\nYou can run the garbage track collection module to have it removed for you, or else you can always delete the file manually."),
+                  ));
         }
 
         // Deleting the Xml nodes of the duplicates
@@ -244,7 +269,21 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         "C:/Users/krezi/Documents/Visual Studio Code/Rekordbox/rekordboxfix_app/test/newCollection.xml";
     File(newCollectionPath).writeAsStringSync(collectionXML.toXmlString());
 
-    // TODO: Make app return alertdialog with the count of removed duplicates
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text("$duplicateRemovalCount duplicates have been removed."),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              widget.goBack(File(newCollectionPath));
+            },
+            child: const Text("Okay"),
+          )
+        ],
+      ),
+    );
   }
 
   @override
