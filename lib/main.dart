@@ -3,13 +3,6 @@ import 'package:xml/xml.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
-List<String> userPhaseList = [
-  "noFileLoaded",
-  "fileLoaded",
-  "duplicateFunctionality",
-  "garbageFunctionality"
-];
-
 void main() {
   runApp(const MyApp());
 }
@@ -40,7 +33,6 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   int activePhaseIndex = 0;
   late File collectionXML;
-// TODO: Replace all those unnecessary "onCancel" functions with navigator.pops
   @override
   Widget build(BuildContext context) {
     switch (activePhaseIndex) {
@@ -59,32 +51,30 @@ class HomePageState extends State<HomePage> {
       case 1:
         {
           return HomeWithFile(
-              file: collectionXML,
-              onCancel: () {
-                setState(() {
-                  activePhaseIndex = 0;
-                });
-              },
-              findDuplicates: () {
-                setState(() {
-                  activePhaseIndex = 2;
-                });
+            file: collectionXML,
+            findDuplicates: () {
+              setState(() {
+                activePhaseIndex = 2;
               });
+            },
+            goBack: () {
+              setState(
+                () {
+                  activePhaseIndex = 0;
+                },
+              );
+            },
+          );
         }
 
       case 2:
         {
           return DuplicatesMenu(
               file: collectionXML,
-              onCancel: () {
-                setState(() {
-                  activePhaseIndex = 1;
-                });
-              },
               goBack: (file) {
                 setState(() {
                   activePhaseIndex = 1;
-                  collectionXML = file;
+                  collectionXML = file ?? collectionXML;
                 });
               });
         }
@@ -111,15 +101,14 @@ class HomePageState extends State<HomePage> {
 }
 
 class DuplicatesMenu extends StatefulWidget {
-  const DuplicatesMenu(
-      {super.key,
-      required this.file,
-      required this.goBack,
-      required this.onCancel});
+  const DuplicatesMenu({
+    super.key,
+    required this.file,
+    required this.goBack,
+  });
 
   final File file;
-  final void Function(File) goBack;
-  final void Function() onCancel;
+  final void Function(File?) goBack;
 
   @override
   State<DuplicatesMenu> createState() => _DuplicatesMenuState();
@@ -167,6 +156,9 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
   }
 
   void mergeDuplicates(Map<String, String> duplicates) {
+    var duplicateBin = Directory("${widget.file.parent.path}\\DuplicateTracks");
+    duplicateBin.createSync();
+
     int duplicateRemovalCount = 0;
     duplicates.forEach(
       (key, value) {
@@ -227,9 +219,8 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         // Deleting the actual files of the duplicates
         try {
           // TODO: Remove trainingwheel by removing copySync: Now the file is first moved to a TestBin folder
-          // TODO: Replace absolute path with relative one
           duplicateTrack.copySync(
-              "C:/Users/krezi/Documents/Visual Studio Code/Rekordbox/rekordboxfix_app/test/testTracks/TestBin/${duplicateTrack.path.substring(duplicateTrack.path.lastIndexOf("/") + 1)}");
+              "${duplicateBin.path}/${duplicateTrack.path.substring(duplicateTrack.path.lastIndexOf("/") + 1)}");
           duplicateTrack.deleteSync();
           duplicateRemovalCount++;
         } catch (e) {
@@ -242,16 +233,12 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
-                        child: Container(
-                          color: Theme.of(context).colorScheme.primary,
-                          padding: const EdgeInsets.all(10),
-                          child: const Text("Okay"),
-                        ),
+                        child: const Center(child: Text("Understood")),
                       )
                     ],
                     title: const Text("File Deletion Error"),
                     content: Text(
-                        "The duplicate at ${secondTrack.getAttribute("Location")} could not be deleted ($e). However, the duplicate will still be removed from your RekordBox library.\nYou can run the garbage track collection module to have it removed for you, or else you can always delete the file manually."),
+                        "The duplicate at ${secondTrack.getAttribute("Location")} could not be deleted. However, the duplicate will still be removed from your RekordBox library.\nYou can run the garbage track collection module to have it removed for you, or else you can always delete the file manually."),
                   ));
         }
 
@@ -263,25 +250,29 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
             .removeWhere((element) => element.getAttribute("TrackID") == value);
       },
     );
-    // TODO: Overwrite the old XML file with new one to fix playlists
-    // TODO: Replace absolute path with relative
-    String newCollectionPath =
-        "C:/Users/krezi/Documents/Visual Studio Code/Rekordbox/rekordboxfix_app/test/newCollection.xml";
+    // TODO: Overwrite the old XML file with new one
+    String newCollectionPath = "${widget.file.parent.path}\\newCollection.xml";
     File(newCollectionPath).writeAsStringSync(collectionXML.toXmlString());
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        content: Text("$duplicateRemovalCount duplicates have been removed."),
+        title: Text(
+            textAlign: TextAlign.center,
+            "$duplicateRemovalCount tracks have been merged"),
+        content: Text(
+            textAlign: TextAlign.center,
+            "The duplicate files have been moved to:\n ${duplicateBin.path}\nfor review and/or deletion"),
         actions: <Widget>[
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               widget.goBack(File(newCollectionPath));
             },
-            child: const Text("Okay"),
+            child: const Center(child: Text("Continue")),
           )
         ],
+        actionsPadding: const EdgeInsets.all(20.0),
       ),
     );
   }
@@ -305,7 +296,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
               const SizedBox(height: 10),
               ElevatedButton(
                   onPressed: () {
-                    widget.onCancel();
+                    widget.goBack(null);
                   },
                   child: const Text('Cancel')),
             ],
@@ -320,12 +311,12 @@ class HomeWithFile extends StatelessWidget {
   const HomeWithFile(
       {super.key,
       required this.file,
-      required this.onCancel,
-      required this.findDuplicates});
+      required this.findDuplicates,
+      required this.goBack});
 
   final File file;
-  final void Function() onCancel;
   final void Function() findDuplicates;
+  final void Function() goBack;
 
   @override
   Widget build(BuildContext context) {
@@ -349,7 +340,8 @@ class HomeWithFile extends StatelessWidget {
               height: 10,
             ),
             ElevatedButton(
-                child: const Text('Cancel'), onPressed: () => {onCancel()})
+                child: const Text('Import a different file'),
+                onPressed: () => {goBack()})
           ],
         ),
       ),
