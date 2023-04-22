@@ -1,4 +1,6 @@
-part of '../main.dart';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:xml/xml.dart';
 
 class DuplicatesMenu extends StatefulWidget {
   const DuplicatesMenu({

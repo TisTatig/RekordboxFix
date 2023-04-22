@@ -1,8 +1,7 @@
 import 'dart:io';
-import 'package:xml/xml.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-part 'duplicatemerging/duplicatesmenu.dart';
+import 'duplicatemerging/duplicatesmenu.dart';
 
 void main() {
   runApp(const MyApp());
