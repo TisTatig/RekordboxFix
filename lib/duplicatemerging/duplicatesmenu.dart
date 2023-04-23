@@ -37,6 +37,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         matchSize;
 
 // TODO: Streamline this process
+// Old duplicatefinding method
     for (int i = 0; i < trackList.length; i++) {
       element = trackList.elementAt(i);
       testName = element.getAttribute('Name');
@@ -55,6 +56,10 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         duplicateMap[testID!] = '$matchID';
       }
     }
+
+    // New duplicatefinding method
+    List<XmlNode> collectionTracks =
+        collectionXML.findAllElements("COLLECTION").first.children;
   }
 
   void mergeDuplicates(Map<String, String> duplicates) {
