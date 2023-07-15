@@ -33,6 +33,9 @@ dependencies:
   file_picker: ^5.1.0
   xml: ^6.2.2
   provider: ^6.0.0
+  sqflite: ^2.2.8
+  sqflite_common_ffi: ^2.2.5
+  path: ^1.8.2
 
 
   # The following adds the Cupertino Icons font to your application.
