@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -210,9 +211,8 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     initDb();
-                    popDb();
                   },
                   child: const Text('Merge Duplicates')),
               const SizedBox(height: 10),
@@ -299,37 +299,39 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       },
       version: 1,
     );
-  }
 
-  void popDb() async {
-    final database =
-        openDatabase(join(await getDatabasesPath(), 'track_database.db'));
-
+    final db = await database;
+    print("${getDatabasesPath()}");
     // Function for inserting tracks into database
     Future<void> insertTrack(Track track, Tempo tempo) async {
-      final db = await database;
-      await db.insert('tracks', track.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-      await db.insert('tempos', tempo.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.transaction((txn) async {
+        txn.batch().insert('tracks', track.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+
+        txn.batch().insert('tempos', tempo.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      });
     }
 
     Future<void> insertHotCue(Hotcue hotcue) async {
-      final db = await database;
-      await db.insert('hotcues', hotcue.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.transaction((txn) async {
+        txn.batch().insert('hotcues', hotcue.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      });
     }
 
     Future<void> insertPlaylist(Playlist playlist) async {
-      final db = await database;
-      await db.insert('playlists', playlist.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.transaction((txn) async {
+        txn.batch().insert('playlists', playlist.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      });
     }
 
     Future<void> insertPlaylistTrack(PlaylistTrack playlisttrack) async {
-      final db = await database;
-      await db.insert('playlisttracks', playlisttrack.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.transaction((txn) async {
+        txn.batch().insert('playlisttracks', playlisttrack.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+      });
     }
 
     List<XmlNode> collectionTracks = collectionXML
@@ -338,7 +340,8 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         .findElements("TRACK")
         .toList();
 
-    for (XmlNode track in collectionTracks) {
+    for (var i = 0; i < collectionTracks.length; i++) {
+      XmlNode track = collectionTracks[i];
       var newtrack = Track(
           id: int.parse(track.getAttribute('TrackID')!),
           name: track.getAttribute('Name')!,
@@ -367,32 +370,35 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           mix: track.getAttribute('TrackID')!);
 
       // Parsing the Tempo data
-      var tracktempo = track.getElement("TEMPO")!;
+      var tracktempo = track.getElement("TEMPO");
+
       var newtempo = Tempo(
           trackid: newtrack.id,
-          battito: tracktempo.getAttribute("Battito") as String,
-          inizio: tracktempo.getAttribute("Inizio") as String,
-          bpm: tracktempo.getAttribute("Bpm") as String,
-          metro: tracktempo.getAttribute("Metro") as String);
+          battito: tracktempo?.getAttribute("Battito") ?? "",
+          inizio: tracktempo?.getAttribute("Inizio") ?? "",
+          bpm: tracktempo?.getAttribute("Bpm") ?? "",
+          metro: tracktempo?.getAttribute("Metro") ?? "");
 
       // Adding track and tempo data to database
-      insertTrack(newtrack, newtempo);
+      await insertTrack(newtrack, newtempo);
 
       var trackhotcues = track.findElements("POSITION_MARK");
       for (XmlElement hotcue in trackhotcues) {
         var newHotCue = Hotcue(
             trackid: newtrack.id,
-            name: hotcue.getAttribute("Name") as String,
-            type: hotcue.getAttribute("Type") as String,
-            start: hotcue.getAttribute("Start") as String,
-            number: hotcue.getAttribute("Num") as String,
-            red: hotcue.getAttribute("Red") as String,
-            green: hotcue.getAttribute("Green") as String,
-            blue: hotcue.getAttribute("Blue") as String);
+            name: hotcue.getAttribute("Name") ?? "",
+            type: hotcue.getAttribute("Type") ?? "",
+            start: hotcue.getAttribute("Start") ?? "",
+            number: hotcue.getAttribute("Num") ?? "",
+            red: hotcue.getAttribute("Red") ?? "",
+            green: hotcue.getAttribute("Green") ?? "",
+            blue: hotcue.getAttribute("Blue") ?? "");
 
         // Adding hotcue data to database
-        insertHotCue(newHotCue);
+        await insertHotCue(newHotCue);
       }
+      print(
+          "Track ${i + 1} of ${collectionTracks.length} loaded into database...");
 
       List<XmlNode> playlistList = collectionXML
           .findAllElements("PLAYLISTS")
@@ -407,7 +413,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
             type: playlist.getAttribute("Type") as String,
             keytype: playlist.getAttribute("Keytype") as String,
             entries: playlist.getAttribute("Entries") as String);
-        insertPlaylist(newPlayList);
+        await insertPlaylist(newPlayList);
 
         playlist.findAllElements("Track").forEach((element) {
           var newPlaylistTrack = PlaylistTrack(
@@ -416,7 +422,17 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           insertPlaylistTrack(newPlaylistTrack);
         });
       }
+
+      // Committing the created db.batches
+      if (i % 100 == 0) {
+        await db.batch().commit();
+      }
     }
+
+    // Committing the final batch and closing
+    await db.batch().commit();
+    print("${getDatabasesPath()}");
+    await db.close();
   }
 
   // TODO: Write bit that finds and merges duplicates
