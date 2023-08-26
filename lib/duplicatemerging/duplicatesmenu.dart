@@ -340,7 +340,9 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         .findElements("TRACK")
         .toList();
 
-    for (var i = 0; i < collectionTracks.length; i++) {
+    int trackNum = collectionTracks.length;
+
+    for (var i = 0; i < trackNum; i++) {
       XmlNode track = collectionTracks[i];
       var newtrack = Track(
           id: int.parse(track.getAttribute('TrackID')!),
@@ -400,40 +402,52 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       print(
           "Track ${i + 1} of ${collectionTracks.length} loaded into database...");
 
-      List<XmlNode> playlistList = collectionXML
-          .findAllElements("PLAYLISTS")
-          .first
-          .findAllElements("Node")
-          .where((element) => element.getAttribute("Type") == "2")
-          .toList();
-
-      for (XmlNode playlist in playlistList) {
-        var newPlayList = Playlist(
-            name: playlist.getAttribute("Name") as String,
-            type: playlist.getAttribute("Type") as String,
-            keytype: playlist.getAttribute("Keytype") as String,
-            entries: playlist.getAttribute("Entries") as String);
-        await insertPlaylist(newPlayList);
-
-        playlist.findAllElements("Track").forEach((element) {
-          var newPlaylistTrack = PlaylistTrack(
-              playlistname: newPlayList.name,
-              trackid: int.parse(element.getAttribute("Key")!));
-          insertPlaylistTrack(newPlaylistTrack);
-        });
-      }
-
       // Committing the created db.batches
       if (i % 100 == 0) {
         await db.batch().commit();
       }
     }
 
-    // Committing the final batch and closing
+    // Committing the final batch of tracks
     await db.batch().commit();
-    print("${getDatabasesPath()}");
+
+    // Finding the playlists
+    List<XmlNode> playlistList = collectionXML
+        .findAllElements("PLAYLISTS")
+        .first
+        .findAllElements("Node")
+        .where((element) => element.getAttribute("Type") == "2")
+        .toList();
+    int playlistNum = playlistList.length;
+
+    for (XmlNode playlist in playlistList) {
+      var newPlayList = Playlist(
+          name: playlist.getAttribute("Name") as String,
+          type: playlist.getAttribute("Type") as String,
+          keytype: playlist.getAttribute("Keytype") as String,
+          entries: playlist.getAttribute("Entries") as String);
+      await insertPlaylist(newPlayList);
+
+      playlist.findAllElements("Track").forEach((element) {
+        var newPlaylistTrack = PlaylistTrack(
+            playlistname: newPlayList.name,
+            trackid: int.parse(element.getAttribute("Key")!));
+        insertPlaylistTrack(newPlaylistTrack);
+      });
+
+      int playlistIndex = playlistList.indexOf(playlist);
+      print("Playlist $playlistIndex  of $playlistNum loaded into database...");
+
+      // Committing playlist batches
+      if (playlistIndex % 2 == 0) {
+        await db.batch().commit();
+      }
+    }
+
+    // Committing final batch of playlists and closing database
+    await db.batch().commit();
     await db.close();
   }
 
-  // TODO: Write bit that finds and merges duplicates
+  // TODO: Write bit that finds and merges duplicates using SQL
 }
