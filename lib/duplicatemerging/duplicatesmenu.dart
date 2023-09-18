@@ -300,37 +300,50 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       version: 1,
     );
 
-    final db = await database;
-    print("${getDatabasesPath()}");
     // Function for inserting tracks into database
+
     Future<void> insertTrack(Track track, Tempo tempo) async {
+      final db = await database;
       await db.transaction((txn) async {
-        txn.batch().insert('tracks', track.toMap(),
+        final batch = txn.batch();
+
+        batch.insert('tracks', track.toMap(),
             conflictAlgorithm: ConflictAlgorithm.replace);
 
-        txn.batch().insert('tempos', tempo.toMap(),
+        batch.insert('tempos', tempo.toMap(),
             conflictAlgorithm: ConflictAlgorithm.replace);
+        await batch.commit();
       });
     }
 
     Future<void> insertHotCue(Hotcue hotcue) async {
+      final db = await database;
       await db.transaction((txn) async {
-        txn.batch().insert('hotcues', hotcue.toMap(),
+        final batch = txn.batch();
+        batch.insert('hotcues', hotcue.toMap(),
             conflictAlgorithm: ConflictAlgorithm.replace);
+
+        await batch.commit();
       });
     }
 
     Future<void> insertPlaylist(Playlist playlist) async {
+      final db = await database;
       await db.transaction((txn) async {
-        txn.batch().insert('playlists', playlist.toMap(),
+        final batch = txn.batch();
+        batch.insert('playlists', playlist.toMap(),
             conflictAlgorithm: ConflictAlgorithm.replace);
+        await batch.commit();
       });
     }
 
     Future<void> insertPlaylistTrack(PlaylistTrack playlisttrack) async {
+      final db = await database;
       await db.transaction((txn) async {
-        txn.batch().insert('playlisttracks', playlisttrack.toMap(),
+        final batch = txn.batch();
+        batch.insert('playlisttracks', playlisttrack.toMap(),
             conflictAlgorithm: ConflictAlgorithm.replace);
+        await batch.commit();
       });
     }
 
@@ -341,6 +354,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         .toList();
 
     int trackNum = collectionTracks.length;
+    final db = await database;
 
     for (var i = 0; i < trackNum; i++) {
       XmlNode track = collectionTracks[i];
@@ -368,8 +382,8 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           location: track.getAttribute('Location')!,
           remixer: track.getAttribute('Remixer')!,
           tonality: track.getAttribute('Tonality')!,
-          label: track.getAttribute('TrackID')!,
-          mix: track.getAttribute('TrackID')!);
+          label: track.getAttribute('Label')!,
+          mix: track.getAttribute('Mix')!);
 
       // Parsing the Tempo data
       var tracktempo = track.getElement("TEMPO");
@@ -403,7 +417,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           "Track ${i + 1} of ${collectionTracks.length} loaded into database...");
 
       // Committing the created db.batches
-      if (i % 100 == 0) {
+      if (i % 10 == 0) {
         await db.batch().commit();
       }
     }
