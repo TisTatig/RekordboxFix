@@ -1,9 +1,10 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Creating new object classes for use in the database
@@ -230,8 +231,11 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
 
 // Creating database of tracks
   void initDb() async {
+    Directory databaseDirectory = await getTemporaryDirectory();
+    String databaseDirectoryPath = databaseDirectory.path;
+
     final database = openDatabase(
-      join(await getDatabasesPath(), 'track_database.db'),
+      join(databaseDirectoryPath, 'track_database.db'),
       onCreate: (db, version) {
         return db.execute('''CREATE TABLE tracks(
             id INTEGER PRIMARY KEY, 
@@ -300,168 +304,202 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       version: 1,
     );
 
-    // Function for inserting tracks into database
-
-    Future<void> insertTrack(Track track, Tempo tempo) async {
-      final db = await database;
-      await db.transaction((txn) async {
-        final batch = txn.batch();
-
-        batch.insert('tracks', track.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
-
-        batch.insert('tempos', tempo.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
-        await batch.commit();
-      });
-    }
-
-    Future<void> insertHotCue(Hotcue hotcue) async {
-      final db = await database;
-      await db.transaction((txn) async {
-        final batch = txn.batch();
-        batch.insert('hotcues', hotcue.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
-
-        await batch.commit();
-      });
-    }
-
-    Future<void> insertPlaylist(Playlist playlist) async {
-      final db = await database;
-      await db.transaction((txn) async {
-        final batch = txn.batch();
-        batch.insert('playlists', playlist.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
-        await batch.commit();
-      });
-    }
-
-    Future<void> insertPlaylistTrack(PlaylistTrack playlisttrack) async {
-      final db = await database;
-      await db.transaction((txn) async {
-        final batch = txn.batch();
-        batch.insert('playlisttracks', playlisttrack.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace);
-        await batch.commit();
-      });
-    }
-
-    List<XmlNode> collectionTracks = collectionXML
-        .findAllElements("COLLECTION")
-        .first
-        .findElements("TRACK")
-        .toList();
-
-    int trackNum = collectionTracks.length;
     final db = await database;
 
-    for (var i = 0; i < trackNum; i++) {
-      XmlNode track = collectionTracks[i];
-      var newtrack = Track(
-          id: int.parse(track.getAttribute('TrackID')!),
-          name: track.getAttribute('Name')!,
-          artist: track.getAttribute('Artist')!,
-          composer: track.getAttribute('Composer')!,
-          album: track.getAttribute('Album')!,
-          grouping: track.getAttribute('Grouping')!,
-          genre: track.getAttribute('Genre')!,
-          kind: track.getAttribute('Kind')!,
-          size: int.parse(track.getAttribute('Size')!),
-          totaltime: int.parse(track.getAttribute('TotalTime')!),
-          discnumber: int.parse(track.getAttribute('DiscNumber')!),
-          tracknumber: int.parse(track.getAttribute('TrackNumber')!),
-          year: int.parse(track.getAttribute('Year')!),
-          averagebpm: track.getAttribute('AverageBpm')!,
-          dateadded: track.getAttribute('DateAdded')!,
-          bitrate: int.parse(track.getAttribute('BitRate')!),
-          samplerate: int.parse(track.getAttribute('SampleRate')!),
-          comments: track.getAttribute('Comments')!,
-          playcount: int.parse(track.getAttribute('PlayCount')!),
-          rating: track.getAttribute('Rating')!,
-          location: track.getAttribute('Location')!,
-          remixer: track.getAttribute('Remixer')!,
-          tonality: track.getAttribute('Tonality')!,
-          label: track.getAttribute('Label')!,
-          mix: track.getAttribute('Mix')!);
+    // Function for inserting tracks into database
+    Future<void> tracksToDatabase() async {
+      // Finding the track data
+      List<XmlNode> collectionTracks = collectionXML
+          .findAllElements("COLLECTION")
+          .first
+          .findElements("TRACK")
+          .toList();
 
-      // Parsing the Tempo data
-      var tracktempo = track.getElement("TEMPO");
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+        for (XmlNode xmlTrack in collectionTracks) {
+          // Finding and parsing trackdata
+          var track = Track(
+              id: int.parse(xmlTrack.getAttribute('TrackID')!),
+              name: xmlTrack.getAttribute('Name')!,
+              artist: xmlTrack.getAttribute('Artist')!,
+              composer: xmlTrack.getAttribute('Composer')!,
+              album: xmlTrack.getAttribute('Album')!,
+              grouping: xmlTrack.getAttribute('Grouping')!,
+              genre: xmlTrack.getAttribute('Genre')!,
+              kind: xmlTrack.getAttribute('Kind')!,
+              size: int.parse(xmlTrack.getAttribute('Size')!),
+              totaltime: int.parse(xmlTrack.getAttribute('TotalTime')!),
+              discnumber: int.parse(xmlTrack.getAttribute('DiscNumber')!),
+              tracknumber: int.parse(xmlTrack.getAttribute('TrackNumber')!),
+              year: int.parse(xmlTrack.getAttribute('Year')!),
+              averagebpm: xmlTrack.getAttribute('AverageBpm')!,
+              dateadded: xmlTrack.getAttribute('DateAdded')!,
+              bitrate: int.parse(xmlTrack.getAttribute('BitRate')!),
+              samplerate: int.parse(xmlTrack.getAttribute('SampleRate')!),
+              comments: xmlTrack.getAttribute('Comments')!,
+              playcount: int.parse(xmlTrack.getAttribute('PlayCount')!),
+              rating: xmlTrack.getAttribute('Rating')!,
+              location: xmlTrack.getAttribute('Location')!,
+              remixer: xmlTrack.getAttribute('Remixer')!,
+              tonality: xmlTrack.getAttribute('Tonality')!,
+              label: xmlTrack.getAttribute('Label')!,
+              mix: xmlTrack.getAttribute('Mix')!);
 
-      var newtempo = Tempo(
-          trackid: newtrack.id,
-          battito: tracktempo?.getAttribute("Battito") ?? "",
-          inizio: tracktempo?.getAttribute("Inizio") ?? "",
-          bpm: tracktempo?.getAttribute("Bpm") ?? "",
-          metro: tracktempo?.getAttribute("Metro") ?? "");
+          // Adding track data to batch
+          batch.insert('tracks', track.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace);
 
-      // Adding track and tempo data to database
-      await insertTrack(newtrack, newtempo);
+          // Finding and parsing the Tempo data
+          var tracktempo = xmlTrack.getElement("TEMPO");
 
-      var trackhotcues = track.findElements("POSITION_MARK");
-      for (XmlElement hotcue in trackhotcues) {
-        var newHotCue = Hotcue(
-            trackid: newtrack.id,
-            name: hotcue.getAttribute("Name") ?? "",
-            type: hotcue.getAttribute("Type") ?? "",
-            start: hotcue.getAttribute("Start") ?? "",
-            number: hotcue.getAttribute("Num") ?? "",
-            red: hotcue.getAttribute("Red") ?? "",
-            green: hotcue.getAttribute("Green") ?? "",
-            blue: hotcue.getAttribute("Blue") ?? "");
+          var tempo = Tempo(
+              trackid: track.id,
+              battito: tracktempo?.getAttribute("Battito") ?? "",
+              inizio: tracktempo?.getAttribute("Inizio") ?? "",
+              bpm: tracktempo?.getAttribute("Bpm") ?? "",
+              metro: tracktempo?.getAttribute("Metro") ?? "");
 
-        // Adding hotcue data to database
-        await insertHotCue(newHotCue);
-      }
-      print(
-          "Track ${i + 1} of ${collectionTracks.length} loaded into database...");
+          // Adding tempo data to the batch
+          batch.insert('tempos', tempo.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace);
 
-      // Committing the created db.batches
-      if (i % 10 == 0) {
-        await db.batch().commit();
-      }
-    }
+          // Finding and parsing the hotcue data
+          var xmlHotCueList = xmlTrack.findElements("POSITION_MARK");
+          for (XmlElement xmlHotCue in xmlHotCueList) {
+            var hotcue = Hotcue(
+                trackid: track.id,
+                name: xmlHotCue.getAttribute("Name") ?? "",
+                type: xmlHotCue.getAttribute("Type") ?? "",
+                start: xmlHotCue.getAttribute("Start") ?? "",
+                number: xmlHotCue.getAttribute("Num") ?? "",
+                red: xmlHotCue.getAttribute("Red") ?? "",
+                green: xmlHotCue.getAttribute("Green") ?? "",
+                blue: xmlHotCue.getAttribute("Blue") ?? "");
 
-    // Committing the final batch of tracks
-    await db.batch().commit();
+            // Adding hotcue data to database
+            batch.insert('hotcues', hotcue.toMap(),
+                conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+          print(
+              "Track ${collectionTracks.indexOf(xmlTrack)} added to the batch");
+        }
 
-    // Finding the playlists
-    List<XmlNode> playlistList = collectionXML
-        .findAllElements("PLAYLISTS")
-        .first
-        .findAllElements("Node")
-        .where((element) => element.getAttribute("Type") == "2")
-        .toList();
-    int playlistNum = playlistList.length;
-
-    for (XmlNode playlist in playlistList) {
-      var newPlayList = Playlist(
-          name: playlist.getAttribute("Name") as String,
-          type: playlist.getAttribute("Type") as String,
-          keytype: playlist.getAttribute("Keytype") as String,
-          entries: playlist.getAttribute("Entries") as String);
-      await insertPlaylist(newPlayList);
-
-      playlist.findAllElements("Track").forEach((element) {
-        var newPlaylistTrack = PlaylistTrack(
-            playlistname: newPlayList.name,
-            trackid: int.parse(element.getAttribute("Key")!));
-        insertPlaylistTrack(newPlaylistTrack);
+        // Committing batch to database
+        await batch.commit();
+        print("Track batch committed to database");
       });
+    }
 
-      int playlistIndex = playlistList.indexOf(playlist);
-      print("Playlist $playlistIndex  of $playlistNum loaded into database...");
+    // Function for inserting playlists into database
+    Future<void> playlistsToDatabase() async {
+      // Finding the playlists
+      List<XmlNode> playlistList = collectionXML
+          .findAllElements("PLAYLISTS")
+          .first
+          .findAllElements("Node")
+          .where((element) => element.getAttribute("Type") == "2")
+          .toList();
 
-      // Committing playlist batches
-      if (playlistIndex % 2 == 0) {
-        await db.batch().commit();
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+
+        // Parsing the playlists
+        for (XmlNode xmlPlaylist in playlistList) {
+          var playlist = Playlist(
+              name: xmlPlaylist.getAttribute("Name") as String,
+              type: xmlPlaylist.getAttribute("Type") as String,
+              keytype: xmlPlaylist.getAttribute("Keytype") as String,
+              entries: xmlPlaylist.getAttribute("Entries") as String);
+
+          // Inserting playlists into the batch
+          batch.insert('playlists', playlist.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace);
+
+          // Finding and parsing the playlisttracks
+          xmlPlaylist.findAllElements("Track").forEach((element) {
+            var playlistTrack = PlaylistTrack(
+                playlistname: playlist.name,
+                trackid: int.parse(element.getAttribute("Key")!));
+
+            // Inserting playlisttracks into the batch
+            batch.insert('playlisttracks', playlistTrack.toMap(),
+                conflictAlgorithm: ConflictAlgorithm.replace);
+          });
+          print(
+              "Playlist ${playlistList.indexOf(xmlPlaylist)} added to the batch");
+        }
+
+        // Committing the playlist batches to database
+        batch.commit();
+      });
+    }
+
+    Future<List> findDuplicateIds() async {
+      List<Map<String, Object?>> duplicateIds = await db.query('''
+        (SELECT DISTINCT t1.id, t1.location, t1.bitrate, t2.id, t2.location, t2.bitrate
+        FROM tracks AS t1
+        JOIN tracks AS t2
+        ON t1.name LIKE t2.name
+        WHERE t1.id < t2.id
+        AND t1.artist LIKE t2.artist
+        AND t1.location != t2.location);
+        ''');
+      return duplicateIds;
+    }
+
+    Future<void> mergeDuplicates(List duplicateIdsList) async {
+      for (Map duplicateMap in duplicateIdsList) {
+        // TODO: Write bit that finds and merges duplicates using SQL
+        List duplicateValuesList = duplicateMap.values.toList();
+
+        int firstTrackBitRate = duplicateValuesList[2];
+        int secondTrackBitRate = duplicateValuesList[5];
+
+        int goodTrackId;
+        String goodTrackLocation;
+        int badTrackId;
+        String badTrackLocation;
+
+        if (firstTrackBitRate < secondTrackBitRate) {
+          badTrackId = duplicateValuesList[0];
+          badTrackLocation = duplicateValuesList[1];
+          goodTrackId = duplicateValuesList[3];
+          goodTrackLocation = duplicateValuesList[4];
+        } else {
+          badTrackId = duplicateValuesList[3];
+          badTrackLocation = duplicateValuesList[4];
+          goodTrackId = duplicateValuesList[0];
+          goodTrackLocation = duplicateValuesList[1];
+        }
+
+        await db.transaction((txn) async {
+          await txn.execute('''
+          UPDATE playlisttracks
+          SET trackid = $goodTrackId
+          WHERE trackid = $badTrackId
+          ''');
+        });
+
+        Batch batch = db.batch();
+        batch.delete('tracks', where: 'id = ?', whereArgs: ['$badTrackId']);
+        batch.delete('hotcues',
+            where: 'trackid = ?', whereArgs: ['$badTrackId']);
+        batch
+            .delete('tempos', where: 'trackid = ?', whereArgs: ['$badTrackId']);
+        batch.commit();
+
+        final File duplicateTrackFile = File(badTrackLocation);
+        print("Track with id: $badTrackId deleted...");
+        // duplicateTrackFile.deleteSync();
       }
     }
 
-    // Committing final batch of playlists and closing database
-    await db.batch().commit();
+    await tracksToDatabase();
+    await playlistsToDatabase();
+    print("Database saved at ${db.path}");
+    await mergeDuplicates(await findDuplicateIds());
+
     await db.close();
   }
-
-  // TODO: Write bit that finds and merges duplicates using SQL
 }

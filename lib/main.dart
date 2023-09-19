@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'duplicatemerging/duplicatesmenu.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite/sqflite.dart';
@@ -9,6 +10,7 @@ void main() {
   if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();
   }
+
   databaseFactory = databaseFactoryFfi;
   runApp(const MyApp());
 }
@@ -39,6 +41,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   int activePhaseIndex = 0;
   late File collectionXML;
+
   @override
   Widget build(BuildContext context) {
     switch (activePhaseIndex) {
