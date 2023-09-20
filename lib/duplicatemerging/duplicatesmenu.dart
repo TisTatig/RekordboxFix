@@ -437,7 +437,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
 
     Future<List> findDuplicateIds() async {
       List<Map<String, Object?>> duplicateIds = await db.query('''
-        (SELECT DISTINCT t1.id, t1.location, t1.bitrate, t2.id, t2.location, t2.bitrate
+        (SELECT DISTINCT t1.id AS firstTrackId, t1.location AS firstTrackLocation, t1.bitrate AS firstTrackBitRate, t2.id AS secondTrackId, t2.location as secondTrackLocation, t2.bitrate AS secondTrackBitRate
         FROM tracks AS t1
         JOIN tracks AS t2
         ON t1.name LIKE t2.name
@@ -451,28 +451,27 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
     Future<void> mergeDuplicates(List duplicateIdsList) async {
       for (Map duplicateMap in duplicateIdsList) {
         // TODO: Write bit that finds and merges duplicates using SQL
-        List duplicateValuesList = duplicateMap.values.toList();
-
-        int firstTrackBitRate = duplicateValuesList[2];
-        int secondTrackBitRate = duplicateValuesList[5];
+        
+        
+        int firstTrackBitRate = duplicateMap['firstTrackBitRate'];
+        int secondTrackBitRate = duplicateMap['secondTrackBitRate'];
 
         int goodTrackId;
-        String goodTrackLocation;
         int badTrackId;
         String badTrackLocation;
 
+        // Comparing the bitrates to preserve the higher quality track
         if (firstTrackBitRate < secondTrackBitRate) {
-          badTrackId = duplicateValuesList[0];
-          badTrackLocation = duplicateValuesList[1];
-          goodTrackId = duplicateValuesList[3];
-          goodTrackLocation = duplicateValuesList[4];
+          badTrackId = duplicateMap['firstTrackId'];
+          badTrackLocation = duplicateMap['firstTrackLocation'];
+          goodTrackId = duplicateMap['secondTrackId'];
         } else {
-          badTrackId = duplicateValuesList[3];
-          badTrackLocation = duplicateValuesList[4];
-          goodTrackId = duplicateValuesList[0];
-          goodTrackLocation = duplicateValuesList[1];
+          badTrackId = duplicateMap['secondTrackId'];
+          badTrackLocation = duplicateMap['secondTrackLocation'];
+          goodTrackId = duplicateMap['firstTrackId'];
         }
 
+        // Replacing bad track playlist entries with good tracks
         await db.transaction((txn) async {
           await txn.execute('''
           UPDATE playlisttracks
@@ -481,6 +480,10 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           ''');
         });
 
+        //TODO: Merging the hotcues
+        
+        
+        // Deleting the remaining bad track entries in the database
         Batch batch = db.batch();
         batch.delete('tracks', where: 'id = ?', whereArgs: ['$badTrackId']);
         batch.delete('hotcues',
@@ -489,6 +492,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
             .delete('tempos', where: 'trackid = ?', whereArgs: ['$badTrackId']);
         batch.commit();
 
+        // Deleting the corresponding badtrack file
         final File duplicateTrackFile = File(badTrackLocation);
         print("Track with id: $badTrackId deleted...");
         // duplicateTrackFile.deleteSync();
