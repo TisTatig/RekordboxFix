@@ -451,8 +451,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
     Future<void> mergeDuplicates(List duplicateIdsList) async {
       for (Map duplicateMap in duplicateIdsList) {
         // TODO: Write bit that finds and merges duplicates using SQL
-        
-        
+
         int firstTrackBitRate = duplicateMap['firstTrackBitRate'];
         int secondTrackBitRate = duplicateMap['secondTrackBitRate'];
 
@@ -471,20 +470,52 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           goodTrackId = duplicateMap['firstTrackId'];
         }
 
-        // Replacing bad track playlist entries with good tracks
-        await db.transaction((txn) async {
-          await txn.execute('''
-          UPDATE playlisttracks
-          SET trackid = $goodTrackId
-          WHERE trackid = $badTrackId
-          ''');
-        });
+        // Retrieve hotcue info from both tracks
+        List<Map<String, Object?>> goodHotCueList = await db.query('''
+        (SELECT * 
+        FROM hotcues
+        WHERE trackid = $goodTrackId
+        )
+        ''');
 
-        //TODO: Merging the hotcues
-        
-        
-        // Deleting the remaining bad track entries in the database
+        List<Map<String, Object?>> badHotCueList = await db.query('''
+        (SELECT * 
+        FROM hotcues
+        WHERE trackid = $badTrackId
+        )
+        ''');
+
+        // Merge hotcues
+        for (Map<String, Object?> badHotCue in badHotCueList) {
+          // If there doesn't exist a "good" hotcue in the goodhotcuelist...
+          if (!goodHotCueList.any((goodHotCue) =>
+              // Of the same type...
+              goodHotCue['type'] == badHotCue['type'] &&
+              // (namely the "hotcue" type instead of memory or loop type)
+              goodHotCue['type'] == '0' &&
+              // ... which isn't within 2 seconds of the proposed "bad" hotcue...
+              ((goodHotCue['start'] as int) - (badHotCue['start'] as int))
+                      .abs() <
+                  2)) {
+            // ...THEN hotcue not yet captured so fix id and add to the list
+            badHotCue['trackid'] = '$goodTrackId';
+            goodHotCueList.add(badHotCue);
+          }
+        }
+
+        // TODO: Fix merged hotcue numbering and colors
+
+        // TODO: Repeat for fadein/fadeout/load/loop
+
+        // TODO: Commit hotcue changes to database
+
         Batch batch = db.batch();
+        // Replacing bad track playlist entries with good tracks
+        batch.update('playlisttracks', {'trackid': '$goodTrackId'},
+            where: 'trackid = ?', whereArgs: ['$badTrackId']);
+
+        // Deleting the remaining bad track entries in the database
+
         batch.delete('tracks', where: 'id = ?', whereArgs: ['$badTrackId']);
         batch.delete('hotcues',
             where: 'trackid = ?', whereArgs: ['$badTrackId']);
