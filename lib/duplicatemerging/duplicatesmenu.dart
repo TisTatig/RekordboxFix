@@ -9,33 +9,33 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Creating new object classes for use in the database
 class Track {
-  final int id;
-  final String name;
-  final String artist;
-  final String composer;
-  final String album;
-  final String grouping;
-  final String genre;
-  final String kind;
-  final int size;
-  final int totaltime;
-  final int discnumber;
-  final int tracknumber;
-  final int year;
-  final String averagebpm;
-  final String dateadded;
-  final int bitrate;
-  final int samplerate;
-  final String comments;
-  final int playcount;
-  final String rating;
-  final String location;
-  final String remixer;
-  final String tonality;
-  final String label;
-  final String mix;
+  int id;
+  String name;
+  String artist;
+  String composer;
+  String album;
+  String grouping;
+  String genre;
+  String kind;
+  int size;
+  int totaltime;
+  int discnumber;
+  int tracknumber;
+  int year;
+  String averagebpm;
+  String dateadded;
+  int bitrate;
+  int samplerate;
+  String comments;
+  int playcount;
+  String rating;
+  String location;
+  String remixer;
+  String tonality;
+  String label;
+  String mix;
 
-  const Track({
+  Track({
     required this.id,
     required this.name,
     required this.artist,
@@ -62,6 +62,36 @@ class Track {
     required this.label,
     required this.mix,
   });
+
+  factory Track.fromMap(Map<String, dynamic> map) {
+    return Track(
+      id: map['id'],
+      name: map['name'],
+      artist: map['artist'],
+      composer: map['composer'],
+      album: map['album'],
+      grouping: map['grouping'],
+      genre: map['genre'],
+      kind: map['kind'],
+      size: map['size'],
+      totaltime: map['totaltime'],
+      discnumber: map['discnumber'],
+      tracknumber: map['tracknumber'],
+      year: map['year'],
+      averagebpm: map['averagebpm'],
+      dateadded: map['dateadded'],
+      bitrate: map['bitrate'],
+      samplerate: map['samplerate'],
+      comments: map['comments'],
+      playcount: map['playcount'],
+      rating: map['rating'],
+      location: map['location'],
+      remixer: map['remixer'],
+      tonality: map['tonality'],
+      label: map['label'],
+      mix: map['mix'],
+    );
+  }
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -94,16 +124,16 @@ class Track {
 }
 
 class Hotcue {
-  final int trackid;
-  final String name;
-  final String type;
-  final String start;
-  final String number;
-  final String red;
-  final String green;
-  final String blue;
+  int trackid;
+  String name;
+  String type;
+  String start;
+  String number;
+  String red;
+  String green;
+  String blue;
 
-  const Hotcue({
+  Hotcue({
     required this.trackid,
     required this.name,
     required this.type,
@@ -113,6 +143,19 @@ class Hotcue {
     required this.green,
     required this.blue,
   });
+
+  factory Hotcue.fromMap(Map<String, dynamic> map) {
+    return Hotcue(
+      trackid: map['trackid'],
+      name: map['name'],
+      type: map['type'],
+      start: map['start'],
+      number: map['number'],
+      red: map['red'],
+      green: map['green'],
+      blue: map['blue'],
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -129,18 +172,28 @@ class Hotcue {
 }
 
 class Tempo {
-  final int trackid;
-  final String inizio;
-  final String bpm;
-  final String metro;
-  final String battito;
+  int trackid;
+  String inizio;
+  String bpm;
+  String metro;
+  String battito;
 
-  const Tempo(
+  Tempo(
       {required this.trackid,
       required this.inizio,
       required this.bpm,
       required this.metro,
       required this.battito});
+
+  factory Tempo.fromMap(Map<String, dynamic> map) {
+    return Tempo(
+      trackid: map['trackid'],
+      inizio: map['inizio'],
+      bpm: map['bpm'],
+      metro: map['metro'],
+      battito: map['battito'],
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -154,16 +207,25 @@ class Tempo {
 }
 
 class Playlist {
-  final String name;
-  final String type;
-  final String keytype;
-  final String entries;
+  String name;
+  String type;
+  String keytype;
+  String entries;
 
-  const Playlist(
+  Playlist(
       {required this.name,
       required this.type,
       required this.keytype,
       required this.entries});
+
+  factory Playlist.fromMap(Map<String, dynamic> map) {
+    return Playlist(
+      name: map['name'],
+      type: map['type'],
+      keytype: map['keytype'],
+      entries: map['entries'],
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {'name': name, 'type': type, 'keytype': keytype, 'entries': entries};
@@ -171,10 +233,15 @@ class Playlist {
 }
 
 class PlaylistTrack {
-  final String playlistname;
-  final int trackid;
+  String playlistname;
+  int trackid;
 
-  const PlaylistTrack({required this.playlistname, required this.trackid});
+  PlaylistTrack({required this.playlistname, required this.trackid});
+
+  factory PlaylistTrack.fromMap(Map<String, dynamic> map) {
+    return PlaylistTrack(
+        playlistname: map['playlistname'], trackid: map['trackid']);
+  }
 
   Map<String, dynamic> toMap() {
     return {'playlistname': playlistname, 'trackid': trackid};
@@ -452,56 +519,76 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       for (Map duplicateMap in duplicateIdsList) {
         // TODO: Write bit that finds and merges duplicates using SQL
 
-        int firstTrackBitRate = duplicateMap['firstTrackBitRate'];
-        int secondTrackBitRate = duplicateMap['secondTrackBitRate'];
+        Map<String, Object?> firstTrackMap = (await db.query('tracks',
+                where: 'id = ?', whereArgs: ['${duplicateMap.keys.first}']))
+            .first;
 
-        int goodTrackId;
-        int badTrackId;
-        String badTrackLocation;
+        Map<String, Object?> secondTrackMap = (await db.query('tracks',
+                where: 'id = ?', whereArgs: ['${duplicateMap.values.first}']))
+            .first;
+
+        Track firstTrack = Track.fromMap(firstTrackMap);
+        Track secondTrack = Track.fromMap(secondTrackMap);
+
+        Track goodTrack;
+        Track badTrack;
 
         // Comparing the bitrates to preserve the higher quality track
-        if (firstTrackBitRate < secondTrackBitRate) {
-          badTrackId = duplicateMap['firstTrackId'];
-          badTrackLocation = duplicateMap['firstTrackLocation'];
-          goodTrackId = duplicateMap['secondTrackId'];
+        if (firstTrack.bitrate < secondTrack.bitrate) {
+          goodTrack = secondTrack;
+          badTrack = firstTrack;
         } else {
-          badTrackId = duplicateMap['secondTrackId'];
-          badTrackLocation = duplicateMap['secondTrackLocation'];
-          goodTrackId = duplicateMap['firstTrackId'];
+          goodTrack = firstTrack;
+          badTrack = secondTrack;
         }
 
         // Retrieve hotcue info from both tracks
-        List<Map<String, Object?>> goodHotCueList = await db.query('''
+        List<Map<String, Object?>> goodHotCueMapList = await db.query('''
         (SELECT * 
         FROM hotcues
-        WHERE trackid = $goodTrackId
+        WHERE trackid = ${goodTrack.id}
         )
         ''');
 
-        List<Map<String, Object?>> badHotCueList = await db.query('''
+        List<Map<String, Object?>> badHotCueMapList = await db.query('''
         (SELECT * 
         FROM hotcues
-        WHERE trackid = $badTrackId
+        WHERE trackid = ${badTrack.id}
         )
         ''');
+
+        List<Hotcue> goodHotCueList = goodHotCueMapList.map((hotcuemap) {
+          return Hotcue.fromMap(hotcuemap);
+        }).toList();
+
+        List<Hotcue> badHotCueList = badHotCueMapList.map((hotcuemap) {
+          return Hotcue.fromMap(hotcuemap);
+        }).toList();
 
         // Merge hotcues
-        for (Map<String, Object?> badHotCue in badHotCueList) {
-          // If there doesn't exist a "good" hotcue in the goodhotcuelist...
-          if (!goodHotCueList.any((goodHotCue) =>
-              // Of the same type...
-              goodHotCue['type'] == badHotCue['type'] &&
-              // (namely the "hotcue" type instead of memory or loop type)
-              goodHotCue['type'] == '0' &&
-              // ... which isn't within 2 seconds of the proposed "bad" hotcue...
-              ((goodHotCue['start'] as int) - (badHotCue['start'] as int))
-                      .abs() <
-                  2)) {
-            // ...THEN hotcue not yet captured so fix id and add to the list
-            badHotCue['trackid'] = '$goodTrackId';
-            goodHotCueList.add(badHotCue);
+        for (Hotcue badHotCue in badHotCueList) {
+          switch (badHotCue.type) {
+
+            // hotcues and memory cues
+            case '0':
+
+            // If there does not exist already a similar good hotcue within 2 seconds...
+              if (!goodHotCueList.any((Hotcue goodHotCue) { return
+              // Filtering out the memorycues with num = -1
+              goodHotCue.number != "-1" && badHotCue.number!= "-1" &&
+                goodHotCue.type == badHotCue.type &&
+                    ((goodHotCue.start as int) - (badHotCue.start as int))
+                            .abs() <
+                        2;
+              })) {
+                
+                // Have goodhotcuelist adopt badhotcue and correct the id
+                badHotCue.trackid = goodTrack.id;
+                goodHotCueList.add(badHotCue);
+              }
           }
-        }
+          case ''
+          
 
         // TODO: Fix merged hotcue numbering and colors
 
@@ -511,21 +598,19 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
 
         Batch batch = db.batch();
         // Replacing bad track playlist entries with good tracks
-        batch.update('playlisttracks', {'trackid': '$goodTrackId'},
-            where: 'trackid = ?', whereArgs: ['$badTrackId']);
+        batch.update('playlisttracks', {'trackid': goodTrack.id},
+            where: 'trackid = ?', whereArgs: [badTrack.id]);
 
         // Deleting the remaining bad track entries in the database
 
-        batch.delete('tracks', where: 'id = ?', whereArgs: ['$badTrackId']);
-        batch.delete('hotcues',
-            where: 'trackid = ?', whereArgs: ['$badTrackId']);
-        batch
-            .delete('tempos', where: 'trackid = ?', whereArgs: ['$badTrackId']);
+        batch.delete('tracks', where: 'id = ?', whereArgs: [badTrack.id]);
+        batch.delete('hotcues', where: 'trackid = ?', whereArgs: [badTrack.id]);
+        batch.delete('tempos', where: 'trackid = ?', whereArgs: [badTrack.id]);
         batch.commit();
 
         // Deleting the corresponding badtrack file
-        final File duplicateTrackFile = File(badTrackLocation);
-        print("Track with id: $badTrackId deleted...");
+        final File duplicateTrackFile = File(badTrack.location);
+        print("Track with id: ${badTrack.id} deleted...");
         // duplicateTrackFile.deleteSync();
       }
     }
