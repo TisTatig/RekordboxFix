@@ -248,6 +248,11 @@ class PlaylistTrack {
   }
 }
 
+class RGB {
+  String red, green, blue;
+  RGB(this.red, this.green, this.blue);
+}
+
 class DuplicatesMenu extends StatefulWidget {
   const DuplicatesMenu({
     super.key,
@@ -517,8 +522,6 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
 
     Future<void> mergeDuplicates(List duplicateIdsList) async {
       for (Map duplicateMap in duplicateIdsList) {
-        // TODO: Write bit that finds and merges duplicates using SQL
-
         Map<String, Object?> firstTrackMap = (await db.query('tracks',
                 where: 'id = ?', whereArgs: ['${duplicateMap.keys.first}']))
             .first;
@@ -565,53 +568,121 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           return Hotcue.fromMap(hotcuemap);
         }).toList();
 
+        // Function checks if there is not already a cue of the same type and around the same time in the track
+        bool cuesOfSameTypeAndNearEachother(
+            Hotcue firstHotcue, Hotcue secondHotcue) {
+          int firstHotcueStart = firstHotcue.start as int;
+          int secondHotcueStart = secondHotcue.start as int;
+          int distanceBetweenHotcues =
+              (firstHotcueStart - secondHotcueStart).abs();
+
+          return firstHotcue.type == secondHotcue.type &&
+              distanceBetweenHotcues < 2;
+        }
+
         // Merge hotcues
         for (Hotcue badHotCue in badHotCueList) {
-          switch (badHotCue.type) {
-
-            // hotcues and memory cues
-            case '0':
-
-            // If there does not exist already a similar good hotcue within 2 seconds...
-              if (!goodHotCueList.any((Hotcue goodHotCue) { return
-              // Filtering out the memorycues with num = -1
-              goodHotCue.number != "-1" && badHotCue.number!= "-1" &&
-                goodHotCue.type == badHotCue.type &&
-                    ((goodHotCue.start as int) - (badHotCue.start as int))
-                            .abs() <
-                        2;
-              })) {
-                
-                // Have goodhotcuelist adopt badhotcue and correct the id
-                badHotCue.trackid = goodTrack.id;
-                goodHotCueList.add(badHotCue);
-              }
+          // Hotcues and memorycues
+          if (badHotCue.type == '0') {
+            // Hotcues have number != -1
+            if (badHotCue.number != '-1' &&
+                !goodHotCueList.any((Hotcue goodHotcue) {
+                  // If the goodhotcuelist doesn't already have a hotcue similar to the proposed badhotcue...
+                  return goodHotcue.number != '-1' &&
+                      cuesOfSameTypeAndNearEachother(goodHotcue, badHotCue);
+                })) {
+              // ... have goodhotcuelist adopt badhotcue and correct the id
+              badHotCue.trackid = goodTrack.id;
+              goodHotCueList.add(badHotCue);
+            } else if (badHotCue.number == '-1' &&
+                !goodHotCueList.any((Hotcue goodHotcue) {
+                  return goodHotcue.number == '-1' &&
+                      cuesOfSameTypeAndNearEachother(goodHotcue, badHotCue);
+                })) {
+              badHotCue.trackid = goodTrack.id;
+              goodHotCueList.add(badHotCue);
+            }
+          } else if (!goodHotCueList.any((Hotcue goodHotCue) {
+            return cuesOfSameTypeAndNearEachother(goodHotCue, badHotCue);
+          })) {
+            badHotCue.trackid = goodTrack.id;
+            goodHotCueList.add(badHotCue);
           }
-          case ''
-          
+        }
 
-        // TODO: Fix merged hotcue numbering and colors
+        // Sort cues by starting time
+        goodHotCueList.sort((firstCue, secondCue) {
+          int firstCueStart = firstCue.start as int;
+          int secondCueStart = secondCue.start as int;
+          return firstCueStart.compareTo(secondCueStart);
+        });
 
-        // TODO: Repeat for fadein/fadeout/load/loop
+        // RGB values taken from own RGB colored collection
+        // TODO: make this dependent on colorscheme found in XML
+        Map<String, RGB> hotcueNumberToColorMap = {
+          '0': RGB("255", "55", "111"),
+          '1': RGB("69", "172", "219"),
+          '2': RGB("125", "193", "61"),
+          '3': RGB("170", "114", "255"),
+          '4': RGB("48", "210", "110"),
+          '5': RGB("224", "100", "27"),
+          '6': RGB("48", "90", "255"),
+          '7': RGB("195", "175", "4")
+        };
 
-        // TODO: Commit hotcue changes to database
+        int goodHotCueListLength = goodHotCueList.length;
 
+        // Number to keep track of hotcues and assign correct number
+        int hotcueNumber = 0;
+
+        // Loop to renumber the hotcues to avoid duplicate cue numbers due to merging
+        for (int i = 0; i < goodHotCueListLength; i++) {
+          Hotcue hotcue = goodHotCueList[i];
+
+          // Memory cues have static number '-1' and must be skipped
+          if (hotcue.number != '-1') {
+            hotcue.number = hotcueNumber.toString();
+
+            // Assign to preset RGB if cuenumber in RGB map, else set to original RGB
+            RGB hotcueRGB = hotcueNumberToColorMap[hotcue.number] ??
+                RGB(hotcue.red, hotcue.green, hotcue.blue);
+
+            // Assign colors to cue
+            hotcue.red = hotcueRGB.red;
+            hotcue.green = hotcueRGB.green;
+            hotcue.blue = hotcueRGB.blue;
+
+            // Increase hotcuenumber to correctly assign next found hotcue
+            hotcueNumber++;
+          }
+        }
+
+        // Start a new batch
         Batch batch = db.batch();
+
         // Replacing bad track playlist entries with good tracks
         batch.update('playlisttracks', {'trackid': goodTrack.id},
             where: 'trackid = ?', whereArgs: [badTrack.id]);
 
-        // Deleting the remaining bad track entries in the database
+        // Removing old hotcues
+        batch.delete('hotcues',
+            where: 'trackid = ? or trackid = ?',
+            whereArgs: [goodTrack.id, badTrack.id]);
 
+        // Inserting new hotcues
+        for (Hotcue hotcue in goodHotCueList) {
+          batch.insert('hotcues', hotcue.toMap());
+        }
+
+        // Deleting the remaining bad track entries in the database
         batch.delete('tracks', where: 'id = ?', whereArgs: [badTrack.id]);
-        batch.delete('hotcues', where: 'trackid = ?', whereArgs: [badTrack.id]);
         batch.delete('tempos', where: 'trackid = ?', whereArgs: [badTrack.id]);
         batch.commit();
 
         // Deleting the corresponding badtrack file
         final File duplicateTrackFile = File(badTrack.location);
+        duplicateTrackFile.deleteSync();
         print("Track with id: ${badTrack.id} deleted...");
-        // duplicateTrackFile.deleteSync();
       }
     }
 
