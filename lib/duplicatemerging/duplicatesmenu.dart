@@ -9,242 +9,328 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Creating new object classes for use in the database
 class Track {
-  int id;
-  String name;
-  String artist;
-  String composer;
-  String album;
-  String grouping;
-  String genre;
-  String kind;
-  int size;
-  int totaltime;
-  int discnumber;
-  int tracknumber;
-  int year;
-  String averagebpm;
-  String dateadded;
-  int bitrate;
-  int samplerate;
-  String comments;
-  int playcount;
-  String rating;
-  String location;
-  String remixer;
-  String tonality;
-  String label;
-  String mix;
+  int TrackID;
+  String Name;
+  String Artist;
+  String Composer;
+  String Album;
+  String Grouping;
+  String Genre;
+  String Kind;
+  int Size;
+  int TotalTime;
+  int DiscNumber;
+  int TrackNumber;
+  int Year;
+  String AverageBpm;
+  String DateAdded;
+  int BitRate;
+  int SampleRate;
+  String Comments;
+  int PlayCount;
+  String Rating;
+  String Location;
+  String Remixer;
+  String Tonality;
+  String Label;
+  String Mix;
 
   Track({
-    required this.id,
-    required this.name,
-    required this.artist,
-    required this.composer,
-    required this.album,
-    required this.grouping,
-    required this.genre,
-    required this.kind,
-    required this.size,
-    required this.totaltime,
-    required this.discnumber,
-    required this.tracknumber,
-    required this.year,
-    required this.averagebpm,
-    required this.dateadded,
-    required this.bitrate,
-    required this.samplerate,
-    required this.comments,
-    required this.playcount,
-    required this.rating,
-    required this.location,
-    required this.remixer,
-    required this.tonality,
-    required this.label,
-    required this.mix,
+    required this.TrackID,
+    required this.Name,
+    required this.Artist,
+    required this.Composer,
+    required this.Album,
+    required this.Grouping,
+    required this.Genre,
+    required this.Kind,
+    required this.Size,
+    required this.TotalTime,
+    required this.DiscNumber,
+    required this.TrackNumber,
+    required this.Year,
+    required this.AverageBpm,
+    required this.DateAdded,
+    required this.BitRate,
+    required this.SampleRate,
+    required this.Comments,
+    required this.PlayCount,
+    required this.Rating,
+    required this.Location,
+    required this.Remixer,
+    required this.Tonality,
+    required this.Label,
+    required this.Mix,
   });
 
   factory Track.fromMap(Map<String, dynamic> map) {
     return Track(
-      id: map['id'],
-      name: map['name'],
-      artist: map['artist'],
-      composer: map['composer'],
-      album: map['album'],
-      grouping: map['grouping'],
-      genre: map['genre'],
-      kind: map['kind'],
-      size: map['size'],
-      totaltime: map['totaltime'],
-      discnumber: map['discnumber'],
-      tracknumber: map['tracknumber'],
-      year: map['year'],
-      averagebpm: map['averagebpm'],
-      dateadded: map['dateadded'],
-      bitrate: map['bitrate'],
-      samplerate: map['samplerate'],
-      comments: map['comments'],
-      playcount: map['playcount'],
-      rating: map['rating'],
-      location: map['location'],
-      remixer: map['remixer'],
-      tonality: map['tonality'],
-      label: map['label'],
-      mix: map['mix'],
+      TrackID: map['TrackID'],
+      Name: map['Name'],
+      Artist: map['Artist'],
+      Composer: map['Composer'],
+      Album: map['Album'],
+      Grouping: map['Grouping'],
+      Genre: map['Genre'],
+      Kind: map['Kind'],
+      Size: map['Size'],
+      TotalTime: map['TotalTime'],
+      DiscNumber: map['DiscNumber'],
+      TrackNumber: map['TrackNumber'],
+      Year: map['Year'],
+      AverageBpm: map['AverageBpm'],
+      DateAdded: map['DateAdded'],
+      BitRate: map['BitRate'],
+      SampleRate: map['SampleRate'],
+      Comments: map['Comments'],
+      PlayCount: map['PlayCount'],
+      Rating: map['Rating'],
+      Location: map['Location'],
+      Remixer: map['Remixer'],
+      Tonality: map['Tonality'],
+      Label: map['Label'],
+      Mix: map['Mix'],
     );
   }
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'name': name,
-      'artist': artist,
-      'composer': composer,
-      'album': album,
-      'grouping': grouping,
-      'genre': genre,
-      'kind': kind,
-      'size': size,
-      'totaltime': totaltime,
-      'discnumber': discnumber,
-      'tracknumber': tracknumber,
-      'year': year,
-      'averagebpm': averagebpm,
-      'dateadded': dateadded,
-      'bitrate': bitrate,
-      'samplerate': samplerate,
-      'comments': comments,
-      'playcount': playcount,
-      'rating': rating,
-      'location': location,
-      'remixer': remixer,
-      'tonality': tonality,
-      'label': label,
-      'mix': mix,
+      'TrackID': TrackID,
+      'Name': Name,
+      'Artist': Artist,
+      'Composer': Composer,
+      'Album': Album,
+      'Grouping': Grouping,
+      'Genre': Genre,
+      'Kind': Kind,
+      'Size': Size,
+      'TotalTime': TotalTime,
+      'DiscNumber': DiscNumber,
+      'TrackNumber': TrackNumber,
+      'Year': Year,
+      'AverageBpm': AverageBpm,
+      'DateAdded': DateAdded,
+      'BitRate': BitRate,
+      'SampleRate': SampleRate,
+      'Comments': Comments,
+      'PlayCount': PlayCount,
+      'Rating': Rating,
+      'Location': Location,
+      'Remixer': Remixer,
+      'Tonality': Tonality,
+      'Label': Label,
+      'Mix': Mix,
     };
+  }
+
+  factory Track.fromXmlNode(XmlNode xmlTrack) {
+    return Track(
+      TrackID: int.parse(xmlTrack.getAttribute('TrackID')!),
+      Name: xmlTrack.getAttribute('Name')!,
+      Artist: xmlTrack.getAttribute('Artist')!,
+      Composer: xmlTrack.getAttribute('Composer')!,
+      Album: xmlTrack.getAttribute('Album')!,
+      Grouping: xmlTrack.getAttribute('Grouping')!,
+      Genre: xmlTrack.getAttribute('Genre')!,
+      Kind: xmlTrack.getAttribute('Kind')!,
+      Size: int.parse(xmlTrack.getAttribute('Size')!),
+      TotalTime: int.parse(xmlTrack.getAttribute('TotalTime')!),
+      DiscNumber: int.parse(xmlTrack.getAttribute('DiscNumber')!),
+      TrackNumber: int.parse(xmlTrack.getAttribute('TrackNumber')!),
+      Year: int.parse(xmlTrack.getAttribute('Year')!),
+      AverageBpm: xmlTrack.getAttribute('AverageBpm')!,
+      DateAdded: xmlTrack.getAttribute('DateAdded')!,
+      BitRate: int.parse(xmlTrack.getAttribute('BitRate')!),
+      SampleRate: int.parse(xmlTrack.getAttribute('SampleRate')!),
+      Comments: xmlTrack.getAttribute('Comments')!,
+      PlayCount: int.parse(xmlTrack.getAttribute('PlayCount')!),
+      Rating: xmlTrack.getAttribute('Rating')!,
+      Location: xmlTrack.getAttribute('Location')!,
+      Remixer: xmlTrack.getAttribute('Remixer')!,
+      Tonality: xmlTrack.getAttribute('Tonality')!,
+      Label: xmlTrack.getAttribute('Label')!,
+      Mix: xmlTrack.getAttribute('Mix')!,
+    );
   }
 }
 
 class Hotcue {
-  int trackid;
-  String name;
-  String type;
-  String start;
-  String number;
-  String red;
-  String green;
-  String blue;
+  int TrackID;
+  String Name;
+  String Type;
+  String Start;
+  String Num;
+  String Red;
+  String Green;
+  String Blue;
 
   Hotcue({
-    required this.trackid,
-    required this.name,
-    required this.type,
-    required this.start,
-    required this.number,
-    required this.red,
-    required this.green,
-    required this.blue,
+    required this.TrackID,
+    required this.Name,
+    required this.Type,
+    required this.Start,
+    required this.Num,
+    required this.Red,
+    required this.Green,
+    required this.Blue,
   });
 
   factory Hotcue.fromMap(Map<String, dynamic> map) {
     return Hotcue(
-      trackid: map['trackid'],
-      name: map['name'],
-      type: map['type'],
-      start: map['start'],
-      number: map['number'],
-      red: map['red'],
-      green: map['green'],
-      blue: map['blue'],
+      TrackID: map['TrackID'],
+      Name: map['Name'],
+      Type: map['Type'],
+      Start: map['Start'],
+      Num: map['Num'],
+      Red: map['Red'],
+      Green: map['Green'],
+      Blue: map['Blue'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'trackid': trackid,
-      'name': name,
-      'type': type,
-      'start': start,
-      'number': number,
-      'red': red,
-      'green': green,
-      'blue': blue
+      'TrackID': TrackID,
+      'Name': Name,
+      'Type': Type,
+      'Start': Start,
+      'Num': Num,
+      'Red': Red,
+      'Green': Green,
+      'Blue': Blue,
     };
+  }
+
+  factory Hotcue.fromXmlElement(int TrackID, XmlElement xmlHotcue) {
+    return Hotcue(
+      TrackID: TrackID,
+      Name: xmlHotcue.getAttribute("Name") ?? "",
+      Type: xmlHotcue.getAttribute("Type") ?? "",
+      Start: xmlHotcue.getAttribute("Start") ?? "",
+      Num: xmlHotcue.getAttribute("Num") ?? "",
+      Red: xmlHotcue.getAttribute("Red") ?? "",
+      Green: xmlHotcue.getAttribute("Green") ?? "",
+      Blue: xmlHotcue.getAttribute("Blue") ?? "",
+    );
   }
 }
 
 class Tempo {
-  int trackid;
-  String inizio;
-  String bpm;
-  String metro;
-  String battito;
+  int TrackID;
+  String Inizio;
+  String Bpm;
+  String Metro;
+  String Battito;
 
-  Tempo(
-      {required this.trackid,
-      required this.inizio,
-      required this.bpm,
-      required this.metro,
-      required this.battito});
+  Tempo({
+    required this.TrackID,
+    required this.Inizio,
+    required this.Bpm,
+    required this.Metro,
+    required this.Battito,
+  });
 
   factory Tempo.fromMap(Map<String, dynamic> map) {
     return Tempo(
-      trackid: map['trackid'],
-      inizio: map['inizio'],
-      bpm: map['bpm'],
-      metro: map['metro'],
-      battito: map['battito'],
+      TrackID: map['TrackID'],
+      Inizio: map['Inizio'],
+      Bpm: map['Bpm'],
+      Metro: map['Metro'],
+      Battito: map['Battito'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'trackid': trackid,
-      'inizio': inizio,
-      'bpm': bpm,
-      'metro': metro,
-      'battito': battito
+      'TrackID': TrackID,
+      'Inizio': Inizio,
+      'Bpm': Bpm,
+      'Metro': Metro,
+      'Battito': Battito,
     };
+  }
+
+  factory Tempo.fromXmlElement(int TrackID, XmlElement xmlTempo) {
+    return Tempo(
+        TrackID: TrackID,
+        Battito: xmlTempo.getAttribute("Battito") ?? "",
+        Inizio: xmlTempo.getAttribute("Inizio") ?? "",
+        Bpm: xmlTempo.getAttribute("Bpm") ?? "",
+        Metro: xmlTempo.getAttribute("Metro") ?? "");
   }
 }
 
 class Playlist {
-  String name;
-  String type;
-  String keytype;
-  String entries;
+  String Name;
+  String Type;
+  String KeyType;
+  String Entries;
+  String FolderName;
 
-  Playlist(
-      {required this.name,
-      required this.type,
-      required this.keytype,
-      required this.entries});
+  Playlist({
+    required this.Name,
+    required this.Type,
+    required this.KeyType,
+    required this.Entries,
+    required this.FolderName,
+  });
 
   factory Playlist.fromMap(Map<String, dynamic> map) {
     return Playlist(
-      name: map['name'],
-      type: map['type'],
-      keytype: map['keytype'],
-      entries: map['entries'],
-    );
+        Name: map['Name'],
+        Type: map['Type'],
+        KeyType: map['KeyType'],
+        Entries: map['Entries'],
+        FolderName: map['FolderName']);
   }
 
   Map<String, dynamic> toMap() {
-    return {'name': name, 'type': type, 'keytype': keytype, 'entries': entries};
+    return {
+      'Name': Name,
+      'Type': Type,
+      'KeyType': KeyType,
+      'Entries': Entries,
+      'FolderName': FolderName
+    };
+  }
+
+  factory Playlist.fromXmlNode(XmlNode xmlPlaylist) {
+    return Playlist(
+        Name: xmlPlaylist.getAttribute("Name") as String,
+        Type: xmlPlaylist.getAttribute("Type") as String,
+        KeyType: xmlPlaylist.getAttribute("Keytype") as String,
+        Entries: xmlPlaylist.getAttribute("Entries") as String,
+        FolderName: xmlPlaylist.parent!.getAttribute("Name")!);
   }
 }
 
 class PlaylistTrack {
-  String playlistname;
-  int trackid;
+  String PlaylistName;
+  int Key;
 
-  PlaylistTrack({required this.playlistname, required this.trackid});
+  PlaylistTrack({
+    required this.PlaylistName,
+    required this.Key,
+  });
 
   factory PlaylistTrack.fromMap(Map<String, dynamic> map) {
     return PlaylistTrack(
-        playlistname: map['playlistname'], trackid: map['trackid']);
+      PlaylistName: map['PlaylistName'],
+      Key: map['Key'],
+    );
   }
 
   Map<String, dynamic> toMap() {
-    return {'playlistname': playlistname, 'trackid': trackid};
+    return {
+      'PlaylistName': PlaylistName,
+      'TrackID': Key,
+    };
+  }
+
+  factory PlaylistTrack.fromXmlElement(
+      Playlist playlist, XmlElement xmlPlaylistTrack) {
+    return PlaylistTrack(
+        PlaylistName: playlist.Name,
+        Key: int.parse(xmlPlaylistTrack.getAttribute("Key")!));
   }
 }
 
@@ -310,67 +396,69 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       join(databaseDirectoryPath, 'track_database.db'),
       onCreate: (db, version) {
         return db.execute('''CREATE TABLE tracks(
-            id INTEGER PRIMARY KEY, 
-            name TEXT, 
-            artist TEXT, 
-            composer TEXT, 
-            album TEXT, 
-            grouping TEXT, 
-            genre TEXT, 
-            kind TEXT, 
-            size INTEGER, 
-            totaltime INTEGER, 
-            discnumber INTEGER, 
-            tracknumber INTEGER, 
-            year INTEGER, 
-            averagebpm TEXT, 
-            dateadded TEXT, 
-            bitrate INTEGER, 
-            samplerate INTEGER, 
-            comments TEXT, 
-            playcount INTEGER, 
-            rating TEXT, 
-            location TEXT, 
-            remixer TEXT, 
-            tonality TEXT, 
-            label TEXT, 
-            mix TEXT
+            TrackID INTEGER PRIMARY KEY, 
+Name TEXT, 
+Artist TEXT, 
+Composer TEXT, 
+Album TEXT, 
+Grouping TEXT, 
+Genre TEXT, 
+Kind TEXT, 
+Size INTEGER, 
+TotalTime INTEGER, 
+DiscNumber INTEGER, 
+TrackNumber INTEGER, 
+Year INTEGER, 
+AverageBpm TEXT, 
+DateAdded TEXT, 
+Bitrate INTEGER, 
+SampleRate INTEGER, 
+Comments TEXT, 
+PlayCount INTEGER, 
+Rating TEXT, 
+Location TEXT, 
+Remixer TEXT, 
+Tonality TEXT, 
+Label TEXT, 
+Mix TEXT
             );
             
-          CREATE TABLE hotcues(
-            trackid INTEGER,
-            name TEXT,
-            type TEXT,
-            start TEXT,
-            number TEXT,
-            red TEXT,
-            green TEXT,
-            blue TEXT,
-            FOREIGN KEY(trackid) REFERENCES tracks(id)
-          );
+          CREATE TABLE hotcues (
+  TrackID INTEGER,
+  Name TEXT,
+  Type TEXT,
+  Start TEXT,
+  Num TEXT,
+  Red TEXT,
+  Green TEXT,
+  Blue TEXT,
+  FOREIGN KEY (TrackID) REFERENCES tracks(TrackID)
+);
 
-          CREATE TABLE tempos(
-            trackid INTEGER,
-            inizio TEXT,
-            bpm TEXT,
-            metro TEXT,
-            battito TEXT,
-            FOREIGN KEY(trackid) REFERENCES tracks(id)
-          );
+CREATE TABLE tempos (
+  TrackID INTEGER,
+  Inizio TEXT,
+  Bpm TEXT,
+  Metro TEXT,
+  Battito TEXT,
+  FOREIGN KEY (TrackID) REFERENCES tracks(TrackID)
+);
 
-          CREATE TABLE playlists(
-            name TEXT PRIMARY KEY,
-            type TEXT,
-            keytype TEXT,
-            entries TEXT
-          );
+CREATE TABLE playlists (
+  Name TEXT PRIMARY KEY,
+  Type TEXT,
+  KeyType TEXT,
+  Entries TEXT,
+  FolderName TEXT
+);
 
-          CREATE TABLE playlisttracks(
-            playlistname TEXT,
-            trackid INTEGER,
-            FOREIGN KEY(playlistname) REFERENCES playlist(name),
-            FOREIGN KEY(trackid) REFERENCES tracks(id)
-          );
+CREATE TABLE playlisttracks (
+  PlaylistName TEXT,
+  TrackID INTEGER,
+  FOREIGN KEY (PlaylistName) REFERENCES playlists(Name),
+  FOREIGN KEY (TrackID) REFERENCES tracks(TrackID)
+);
+
             ''');
       },
       version: 1,
@@ -391,63 +479,26 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         final batch = txn.batch();
         for (XmlNode xmlTrack in collectionTracks) {
           // Finding and parsing trackdata
-          var track = Track(
-              id: int.parse(xmlTrack.getAttribute('TrackID')!),
-              name: xmlTrack.getAttribute('Name')!,
-              artist: xmlTrack.getAttribute('Artist')!,
-              composer: xmlTrack.getAttribute('Composer')!,
-              album: xmlTrack.getAttribute('Album')!,
-              grouping: xmlTrack.getAttribute('Grouping')!,
-              genre: xmlTrack.getAttribute('Genre')!,
-              kind: xmlTrack.getAttribute('Kind')!,
-              size: int.parse(xmlTrack.getAttribute('Size')!),
-              totaltime: int.parse(xmlTrack.getAttribute('TotalTime')!),
-              discnumber: int.parse(xmlTrack.getAttribute('DiscNumber')!),
-              tracknumber: int.parse(xmlTrack.getAttribute('TrackNumber')!),
-              year: int.parse(xmlTrack.getAttribute('Year')!),
-              averagebpm: xmlTrack.getAttribute('AverageBpm')!,
-              dateadded: xmlTrack.getAttribute('DateAdded')!,
-              bitrate: int.parse(xmlTrack.getAttribute('BitRate')!),
-              samplerate: int.parse(xmlTrack.getAttribute('SampleRate')!),
-              comments: xmlTrack.getAttribute('Comments')!,
-              playcount: int.parse(xmlTrack.getAttribute('PlayCount')!),
-              rating: xmlTrack.getAttribute('Rating')!,
-              location: xmlTrack.getAttribute('Location')!,
-              remixer: xmlTrack.getAttribute('Remixer')!,
-              tonality: xmlTrack.getAttribute('Tonality')!,
-              label: xmlTrack.getAttribute('Label')!,
-              mix: xmlTrack.getAttribute('Mix')!);
+          Track track = Track.fromXmlNode(xmlTrack);
 
           // Adding track data to batch
           batch.insert('tracks', track.toMap(),
               conflictAlgorithm: ConflictAlgorithm.replace);
 
           // Finding and parsing the Tempo data
-          var tracktempo = xmlTrack.getElement("TEMPO");
-
-          var tempo = Tempo(
-              trackid: track.id,
-              battito: tracktempo?.getAttribute("Battito") ?? "",
-              inizio: tracktempo?.getAttribute("Inizio") ?? "",
-              bpm: tracktempo?.getAttribute("Bpm") ?? "",
-              metro: tracktempo?.getAttribute("Metro") ?? "");
-
-          // Adding tempo data to the batch
-          batch.insert('tempos', tempo.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          List<XmlElement> trackTempoList =
+              xmlTrack.findAllElements("TEMPO").toList();
+          for (XmlElement trackTempo in trackTempoList) {
+            // Adding tempo data to the batch
+            Tempo tempo = Tempo.fromXmlElement(track.TrackID, trackTempo);
+            batch.insert('tempos', tempo.toMap(),
+                conflictAlgorithm: ConflictAlgorithm.replace);
+          }
 
           // Finding and parsing the hotcue data
           var xmlHotCueList = xmlTrack.findElements("POSITION_MARK");
           for (XmlElement xmlHotCue in xmlHotCueList) {
-            var hotcue = Hotcue(
-                trackid: track.id,
-                name: xmlHotCue.getAttribute("Name") ?? "",
-                type: xmlHotCue.getAttribute("Type") ?? "",
-                start: xmlHotCue.getAttribute("Start") ?? "",
-                number: xmlHotCue.getAttribute("Num") ?? "",
-                red: xmlHotCue.getAttribute("Red") ?? "",
-                green: xmlHotCue.getAttribute("Green") ?? "",
-                blue: xmlHotCue.getAttribute("Blue") ?? "");
+            Hotcue hotcue = Hotcue.fromXmlElement(track.TrackID, xmlHotCue);
 
             // Adding hotcue data to database
             batch.insert('hotcues', hotcue.toMap(),
@@ -469,8 +520,10 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       List<XmlNode> playlistList = collectionXML
           .findAllElements("PLAYLISTS")
           .first
-          .findAllElements("Node")
-          .where((element) => element.getAttribute("Type") == "2")
+          .findAllElements("NODE")
+          .where((element) =>
+              element.getAttribute("Name") != "ROOT" &&
+              element.getAttribute("Type") != "0")
           .toList();
 
       await db.transaction((txn) async {
@@ -478,11 +531,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
 
         // Parsing the playlists
         for (XmlNode xmlPlaylist in playlistList) {
-          var playlist = Playlist(
-              name: xmlPlaylist.getAttribute("Name") as String,
-              type: xmlPlaylist.getAttribute("Type") as String,
-              keytype: xmlPlaylist.getAttribute("Keytype") as String,
-              entries: xmlPlaylist.getAttribute("Entries") as String);
+          Playlist playlist = Playlist.fromXmlNode(xmlPlaylist);
 
           // Inserting playlists into the batch
           batch.insert('playlists', playlist.toMap(),
@@ -490,9 +539,8 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
 
           // Finding and parsing the playlisttracks
           xmlPlaylist.findAllElements("Track").forEach((element) {
-            var playlistTrack = PlaylistTrack(
-                playlistname: playlist.name,
-                trackid: int.parse(element.getAttribute("Key")!));
+            PlaylistTrack playlistTrack =
+                PlaylistTrack.fromXmlElement(playlist, element);
 
             // Inserting playlisttracks into the batch
             batch.insert('playlisttracks', playlistTrack.toMap(),
@@ -509,13 +557,13 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
 
     Future<List> findDuplicateIds() async {
       List<Map<String, Object?>> duplicateIds = await db.query('''
-        (SELECT DISTINCT t1.id AS firstTrackId, t1.location AS firstTrackLocation, t1.bitrate AS firstTrackBitRate, t2.id AS secondTrackId, t2.location as secondTrackLocation, t2.bitrate AS secondTrackBitRate
+        (SELECT DISTINCT t1.TrackID AS firstTrackId, t2,TrackID AS secondTrackId
         FROM tracks AS t1
         JOIN tracks AS t2
-        ON t1.name LIKE t2.name
-        WHERE t1.id < t2.id
-        AND t1.artist LIKE t2.artist
-        AND t1.location != t2.location);
+        ON t1.Name LIKE t2.Name
+        WHERE t1.TrackID < t2.TrackID
+        AND t1.Artist LIKE t2.Artist
+        AND t1.Location != t2.Location);
         ''');
       return duplicateIds;
     }
@@ -523,11 +571,13 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
     Future<void> mergeDuplicates(List duplicateIdsList) async {
       for (Map duplicateMap in duplicateIdsList) {
         Map<String, Object?> firstTrackMap = (await db.query('tracks',
-                where: 'id = ?', whereArgs: ['${duplicateMap.keys.first}']))
+                where: 'TrackID = ?',
+                whereArgs: ['${duplicateMap.keys.first}']))
             .first;
 
         Map<String, Object?> secondTrackMap = (await db.query('tracks',
-                where: 'id = ?', whereArgs: ['${duplicateMap.values.first}']))
+                where: 'TrackID = ?',
+                whereArgs: ['${duplicateMap.values.first}']))
             .first;
 
         Track firstTrack = Track.fromMap(firstTrackMap);
@@ -537,7 +587,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         Track badTrack;
 
         // Comparing the bitrates to preserve the higher quality track
-        if (firstTrack.bitrate < secondTrack.bitrate) {
+        if (firstTrack.BitRate < secondTrack.BitRate) {
           goodTrack = secondTrack;
           badTrack = firstTrack;
         } else {
@@ -549,14 +599,14 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         List<Map<String, Object?>> goodHotCueMapList = await db.query('''
         (SELECT * 
         FROM hotcues
-        WHERE trackid = ${goodTrack.id}
+        WHERE TrackID = ${goodTrack.TrackID}
         )
         ''');
 
         List<Map<String, Object?>> badHotCueMapList = await db.query('''
         (SELECT * 
         FROM hotcues
-        WHERE trackid = ${badTrack.id}
+        WHERE TrackID = ${badTrack.TrackID}
         )
         ''');
 
@@ -571,49 +621,49 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         // Function checks if there is not already a cue of the same type and around the same time in the track
         bool cuesOfSameTypeAndNearEachother(
             Hotcue firstHotcue, Hotcue secondHotcue) {
-          int firstHotcueStart = firstHotcue.start as int;
-          int secondHotcueStart = secondHotcue.start as int;
+          int firstHotcueStart = firstHotcue.Start as int;
+          int secondHotcueStart = secondHotcue.Start as int;
           int distanceBetweenHotcues =
               (firstHotcueStart - secondHotcueStart).abs();
 
-          return firstHotcue.type == secondHotcue.type &&
+          return firstHotcue.Type == secondHotcue.Type &&
               distanceBetweenHotcues < 2;
         }
 
         // Merge hotcues
         for (Hotcue badHotCue in badHotCueList) {
           // Hotcues and memorycues
-          if (badHotCue.type == '0') {
+          if (badHotCue.Type == '0') {
             // Hotcues have number != -1
-            if (badHotCue.number != '-1' &&
+            if (badHotCue.Num != '-1' &&
                 !goodHotCueList.any((Hotcue goodHotcue) {
                   // If the goodhotcuelist doesn't already have a hotcue similar to the proposed badhotcue...
-                  return goodHotcue.number != '-1' &&
+                  return goodHotcue.Num != '-1' &&
                       cuesOfSameTypeAndNearEachother(goodHotcue, badHotCue);
                 })) {
               // ... have goodhotcuelist adopt badhotcue and correct the id
-              badHotCue.trackid = goodTrack.id;
+              badHotCue.TrackID = goodTrack.TrackID;
               goodHotCueList.add(badHotCue);
-            } else if (badHotCue.number == '-1' &&
+            } else if (badHotCue.Num == '-1' &&
                 !goodHotCueList.any((Hotcue goodHotcue) {
-                  return goodHotcue.number == '-1' &&
+                  return goodHotcue.Num == '-1' &&
                       cuesOfSameTypeAndNearEachother(goodHotcue, badHotCue);
                 })) {
-              badHotCue.trackid = goodTrack.id;
+              badHotCue.TrackID = goodTrack.TrackID;
               goodHotCueList.add(badHotCue);
             }
           } else if (!goodHotCueList.any((Hotcue goodHotCue) {
             return cuesOfSameTypeAndNearEachother(goodHotCue, badHotCue);
           })) {
-            badHotCue.trackid = goodTrack.id;
+            badHotCue.TrackID = goodTrack.TrackID;
             goodHotCueList.add(badHotCue);
           }
         }
 
         // Sort cues by starting time
         goodHotCueList.sort((firstCue, secondCue) {
-          int firstCueStart = firstCue.start as int;
-          int secondCueStart = secondCue.start as int;
+          int firstCueStart = firstCue.Start as int;
+          int secondCueStart = secondCue.Start as int;
           return firstCueStart.compareTo(secondCueStart);
         });
 
@@ -640,17 +690,17 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
           Hotcue hotcue = goodHotCueList[i];
 
           // Memory cues have static number '-1' and must be skipped
-          if (hotcue.number != '-1') {
-            hotcue.number = hotcueNumber.toString();
+          if (hotcue.Num != '-1') {
+            hotcue.Num = hotcueNumber.toString();
 
             // Assign to preset RGB if cuenumber in RGB map, else set to original RGB
-            RGB hotcueRGB = hotcueNumberToColorMap[hotcue.number] ??
-                RGB(hotcue.red, hotcue.green, hotcue.blue);
+            RGB hotcueRGB = hotcueNumberToColorMap[hotcue.Num] ??
+                RGB(hotcue.Red, hotcue.Green, hotcue.Blue);
 
             // Assign colors to cue
-            hotcue.red = hotcueRGB.red;
-            hotcue.green = hotcueRGB.green;
-            hotcue.blue = hotcueRGB.blue;
+            hotcue.Red = hotcueRGB.red;
+            hotcue.Green = hotcueRGB.green;
+            hotcue.Blue = hotcueRGB.blue;
 
             // Increase hotcuenumber to correctly assign next found hotcue
             hotcueNumber++;
@@ -661,13 +711,13 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         Batch batch = db.batch();
 
         // Replacing bad track playlist entries with good tracks
-        batch.update('playlisttracks', {'trackid': goodTrack.id},
-            where: 'trackid = ?', whereArgs: [badTrack.id]);
+        batch.update('playlisttracks', {'trackid': goodTrack.TrackID},
+            where: 'trackid = ?', whereArgs: [badTrack.TrackID]);
 
         // Removing old hotcues
         batch.delete('hotcues',
             where: 'trackid = ? or trackid = ?',
-            whereArgs: [goodTrack.id, badTrack.id]);
+            whereArgs: [goodTrack.TrackID, badTrack.TrackID]);
 
         // Inserting new hotcues
         for (Hotcue hotcue in goodHotCueList) {
@@ -675,64 +725,115 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
         }
 
         // Deleting the remaining bad track entries in the database
-        batch.delete('tracks', where: 'id = ?', whereArgs: [badTrack.id]);
-        batch.delete('tempos', where: 'trackid = ?', whereArgs: [badTrack.id]);
+        batch.delete('tracks', where: 'id = ?', whereArgs: [badTrack.TrackID]);
+        batch.delete('tempos',
+            where: 'trackid = ?', whereArgs: [badTrack.TrackID]);
         batch.commit();
 
         // Deleting the corresponding badtrack file
-        final File duplicateTrackFile = File(badTrack.location);
+        final File duplicateTrackFile = File(badTrack.Location);
         duplicateTrackFile.deleteSync();
-        print("Track with id: ${badTrack.id} deleted...");
+        print("Track with id: ${badTrack.TrackID} deleted...");
       }
     }
 
     Future<void> buildNewXml() async {
-      
-      XmlElement xmlProductElement = collectionXML
-              .findAllElements("PRODUCT")
-              .first;
+      XmlElement xmlProductElement =
+          collectionXML.findAllElements("PRODUCT").first;
 
-      String productName = xmlProductElement.getAttribute('Name') ?? "rekordbox";
-      String productVersion = xmlProductElement.getAttribute('Version') ?? "6.6.11";
-      String productCompany = xmlProductElement.getAttribute('Company') ?? "AlphaTheta";    
-      
-      String trackCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) from tracks')).toString();
-      List<Map<String, Object?>> trackMapList = await db.query('tracks');
-      List<Map<String, Object?>> tempoMapList = await db.query('tempos');
-      List<Map<String, Object?>> positionMarkMapList = await db.query('hotcues');
-      List<Map<String,Object?>> playlistMapList = await db.query('playlists');
-      List<Map<String,Object?>> playlistTrackMapList = await db.query('playlisttracks');
-      
+      String productName =
+          xmlProductElement.getAttribute('Name') ?? "rekordbox";
+      String productVersion =
+          xmlProductElement.getAttribute('Version') ?? "6.6.11";
+      String productCompany =
+          xmlProductElement.getAttribute('Company') ?? "AlphaTheta";
+
+      String trackCount = Sqflite.firstIntValue(
+              await db.rawQuery('SELECT COUNT(*) from tracks'))
+          .toString();
 
       // TODO: Finish building new XML
       final builder = XmlBuilder();
       builder.processing('xml', 'version="1.0"');
       builder.element("DJ_PLAYLISTS", nest: () {
         builder.attribute('Version', "1.0.0");
-        builder..element("PRODUCT", 
-                        attributes: {
-                          'Name': productName,
-                          'Version': productVersion,
-                          'Company': productCompany},
-                        nest: () {
-                              builder.element('COLLECTION', attributes: {'Entries: trackCount'})
-                          });
-          ..element('PLAYLISTS');     
-
+        builder.element("PRODUCT", attributes: {
+          'Name': productName,
+          'Version': productVersion,
+          'Company': productCompany
+        }, nest: () {
+          builder.element('COLLECTION', attributes: {'Entries': trackCount});
+        });
+        builder.element('PLAYLISTS', nest: () {
+          builder.element('NODE',
+              attributes: {'Type': '0', 'Name': 'ROOT', 'Count': ''});
         });
       });
 
       final newXML = builder.buildDocument();
 
-      void buildTrackNode (XmlBuilder builder, Map<String, String> trackMap) 
-      {
-        Track track = Track(trackMap).fromMap();
-        List<Map<String, Object?>> hotcueMapList = await db.query('hotcues', where: 'trackid = ?', whereArgs: [track.id]);
-        
-        builder.element('TRACK', attributes: trackMap, nest:() {
-          builder.element('TEMPO', attributes: 
-          
+      void addTrackElement(
+          XmlDocument document, XmlBuilder builder, Track track) async {
+        builder.element('TRACK',
+            attributes: track.toMap().cast<String, String>());
+        XmlElement collection = document.findAllElements('COLLECTION').first;
+        collection.children.add(builder.buildFragment());
+
+        // Find the built track element in the xml for further additions
+        XmlElement xmlTrack = document
+            .findAllElements('TRACK')
+            .where((element) =>
+                element.getAttribute("TrackID") == track.TrackID.toString())
+            .first;
+
+        // Adding tempo nodes to track element
+        List<Map<String, Object?>> tempoMapList = await db
+            .query('tempos', where: 'TrackID = ?', whereArgs: [track.TrackID]);
+        for (Map<String, Object?> tempoMapObject in tempoMapList) {
+          Map<String, String> tempoMap = tempoMapObject.cast<String, String>();
+          builder.element('TEMPO', attributes: tempoMap);
+          xmlTrack.children.add(builder.buildFragment());
         }
+
+        // Adding hotcue nodes to track element
+        List<Map<String, Object?>> hotcueMapList = await db
+            .query('hotcues', where: 'TrackID = ?', whereArgs: [track.TrackID]);
+        for (Map<String, Object?> hotcueMapObject in hotcueMapList) {
+          Map<String, String> hotcueMap =
+              hotcueMapObject.cast<String, String>();
+          builder.element('POSITION_MARK', attributes: hotcueMap);
+          xmlTrack.children.add(builder.buildFragment());
+        }
+      }
+
+      // Obtaining list of all tracks
+      List<Map<String, String>> trackMapList =
+          (await db.query('tracks')).toList().cast<Map<String, String>>();
+
+      // Adding track node with hotcues and tempo children nodes
+      for (Map<String, String> trackMap in trackMapList) {
+        Track track = Track.fromMap(trackMap);
+        addTrackElement(newXML, builder, track);
+      }
+
+      // TODO: Add playlists recursively starting from ROOT
+
+      List<Map<String, String>> playlistFolderList = (await db.query(
+              'playlists',
+              where: "Type = ? AND FolderName = ?",
+              whereArgs: ["0", "ROOT"]))
+          .toList()
+          .cast<Map<String, String>>();
+
+      for (Map<String, String> playlistFolderMap in playlistFolderList) {
+        builder.element("NODE", attributes: playlistFolderMap);
+        newXML
+            .findElements('NODE')
+            .firstWhere((element) =>
+                element.getAttribute("Name") == "ROOT" &&
+                element.getAttribute("Type") == "0")
+            .children
+            .add(builder.buildFragment());
       }
     }
 
