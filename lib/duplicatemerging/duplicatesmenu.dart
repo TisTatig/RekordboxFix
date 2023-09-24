@@ -686,11 +686,27 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
       }
     }
 
+    Future<void> buildNewXml() async {
+      String rekordboxVersion = collectionXML
+              .findAllElements("PRODUCT")
+              .first
+              .getAttribute("Version") ??
+          "6.6.11";
+
+      // TODO: Finish building new XML
+      final builder = XmlBuilder();
+      builder.processing('xml', 'version="1.0"');
+      builder.element("DJ_PLAYLISTS", nest: () {
+        builder.attribute('Version', "1.0.0");
+        builder.element("PRODUCT", nest: () {});
+      });
+    }
+
     await tracksToDatabase();
     await playlistsToDatabase();
     print("Database saved at ${db.path}");
     await mergeDuplicates(await findDuplicateIds());
-
+    await buildNewXml();
     await db.close();
   }
 }
