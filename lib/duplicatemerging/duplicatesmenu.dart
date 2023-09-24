@@ -687,19 +687,53 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
     }
 
     Future<void> buildNewXml() async {
-      String rekordboxVersion = collectionXML
+      
+      XmlElement xmlProductElement = collectionXML
               .findAllElements("PRODUCT")
-              .first
-              .getAttribute("Version") ??
-          "6.6.11";
+              .first;
+
+      String productName = xmlProductElement.getAttribute('Name') ?? "rekordbox";
+      String productVersion = xmlProductElement.getAttribute('Version') ?? "6.6.11";
+      String productCompany = xmlProductElement.getAttribute('Company') ?? "AlphaTheta";    
+      
+      String trackCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) from tracks')).toString();
+      List<Map<String, Object?>> trackMapList = await db.query('tracks');
+      List<Map<String, Object?>> tempoMapList = await db.query('tempos');
+      List<Map<String, Object?>> positionMarkMapList = await db.query('hotcues');
+      List<Map<String,Object?>> playlistMapList = await db.query('playlists');
+      List<Map<String,Object?>> playlistTrackMapList = await db.query('playlisttracks');
+      
 
       // TODO: Finish building new XML
       final builder = XmlBuilder();
       builder.processing('xml', 'version="1.0"');
       builder.element("DJ_PLAYLISTS", nest: () {
         builder.attribute('Version', "1.0.0");
-        builder.element("PRODUCT", nest: () {});
+        builder..element("PRODUCT", 
+                        attributes: {
+                          'Name': productName,
+                          'Version': productVersion,
+                          'Company': productCompany},
+                        nest: () {
+                              builder.element('COLLECTION', attributes: {'Entries: trackCount'})
+                          });
+          ..element('PLAYLISTS');     
+
+        });
       });
+
+      final newXML = builder.buildDocument();
+
+      void buildTrackNode (XmlBuilder builder, Map<String, String> trackMap) 
+      {
+        Track track = Track(trackMap).fromMap();
+        List<Map<String, Object?>> hotcueMapList = await db.query('hotcues', where: 'trackid = ?', whereArgs: [track.id]);
+        
+        builder.element('TRACK', attributes: trackMap, nest:() {
+          builder.element('TEMPO', attributes: 
+          
+        }
+      }
     }
 
     await tracksToDatabase();
