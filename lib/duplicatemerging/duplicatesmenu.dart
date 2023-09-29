@@ -1,12 +1,13 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:core';
 
 // Creating new object classes for use in the database
@@ -350,7 +351,7 @@ class Playlist {
     return Playlist(
         Name: xmlPlaylist.getAttribute("Name") as String,
         Type: xmlPlaylist.getAttribute("Type") as String,
-        KeyType: xmlPlaylist.getAttribute("Keytype") as String,
+        KeyType: xmlPlaylist.getAttribute("KeyType") as String,
         Entries: xmlPlaylist.getAttribute("Entries") as String,
         FolderName: xmlPlaylist.parent!.getAttribute("Name")!);
   }
@@ -384,7 +385,7 @@ class PlaylistTrack {
   Map<String, dynamic> toMap() {
     return {
       'PlaylistName': PlaylistName,
-      'TrackID': Key,
+      'Key': Key,
     };
   }
 
@@ -436,7 +437,7 @@ class PlaylistFolder {
     return PlaylistFolder(
         Name: xmlPlaylistFolder.getAttribute("Name") as String,
         Type: xmlPlaylistFolder.getAttribute("Type") as String,
-        Count: xmlPlaylistFolder.getAttribute("Keytype") as String,
+        Count: xmlPlaylistFolder.getAttribute("Count") as String,
         ParentName: xmlPlaylistFolder.parent?.getAttribute('Name') ?? "");
   }
 
@@ -526,7 +527,7 @@ TrackNumber INTEGER,
 Year INTEGER, 
 AverageBpm TEXT, 
 DateAdded TEXT, 
-Bitrate INTEGER, 
+BitRate INTEGER, 
 SampleRate INTEGER, 
 Comments TEXT, 
 PlayCount INTEGER, 
@@ -564,7 +565,7 @@ CREATE TABLE playlists (
   Type TEXT,
   KeyType TEXT,
   Entries TEXT,
-  FolderName TEXT
+  FolderName TEXT,
   FOREIGN KEY (FolderName) REFERENCES playlistfolders(Name)
 );
 
@@ -576,10 +577,10 @@ CREATE TABLE playlisttracks (
 );
 
 Create TABLE playlistfolders (
-  Name TEXT PRIMARY KEY
+  Name TEXT PRIMARY KEY,
   Type TEXT,
   Count TEXT,
-  ParentName TEXT,
+  ParentName TEXT
 
 )
 
@@ -706,9 +707,9 @@ Create TABLE playlistfolders (
       });
     }
 
-    Future<List> findDuplicateIds() async {
-      List<Map<String, Object?>> duplicateIds = await db.query('''
-        (SELECT DISTINCT t1.TrackID AS firstTrackId, t2,TrackID AS secondTrackId
+    Future<List<Map<String, dynamic>>> findDuplicateIds() async {
+      List<Map<String, Object?>> duplicateIdsQuery = await db.query('''
+        (SELECT DISTINCT t1.TrackID AS firstTrackId, t2.TrackID AS secondTrackId
         FROM tracks AS t1
         JOIN tracks AS t2
         ON t1.Name LIKE t2.Name
@@ -716,175 +717,208 @@ Create TABLE playlistfolders (
         AND t1.Artist LIKE t2.Artist
         AND t1.Location != t2.Location);
         ''');
+      List<Map<String, dynamic>> duplicateIds =
+          duplicateIdsQuery.map((e) => Map<String, dynamic>.from(e)).toList();
       return duplicateIds;
     }
 
-    Future<void> mergeDuplicates(List duplicateIdsList) async {
+    Future<void> mergeDuplicates(
+        List<Map<String, dynamic>> duplicateIdsList) async {
       for (Map duplicateMap in duplicateIdsList) {
-        Map<String, Object?> firstTrackMap = (await db.query('tracks',
-                where: 'TrackID = ?',
-                whereArgs: ['${duplicateMap.keys.first}']))
-            .first;
+        Map<String, Object?>? firstTrackMap = (await db.query('tracks',
+                    where: 'TrackID = ?',
+                    whereArgs: [duplicateMap["firstTrackId"]]))
+                // If a track has versions 1,2 and 3, this will return null when trying to access already deleted version 2 in the comparison with 3
+                .firstOrNull ??
 
-        Map<String, Object?> secondTrackMap = (await db.query('tracks',
-                where: 'TrackID = ?',
-                whereArgs: ['${duplicateMap.values.first}']))
-            .first;
+            // Return the ID of the track that was not deleted in the first duplicateset that contained the track
+            (await db.query('tracks', where: 'TrackID = ?', whereArgs: [
+              duplicateIdsList
+                  .firstWhere((element) =>
+                      element.containsValue(duplicateMap['firstTrackId']))
+                  .entries
+                  .firstWhere((element) =>
+                      element.value != duplicateMap['firstTrackId'])
+                  .value
+            ]))
+                .firstOrNull;
 
-        Track firstTrack = Track.fromMap(firstTrackMap);
-        Track secondTrack = Track.fromMap(secondTrackMap);
-
-        Track goodTrack;
-        Track badTrack;
-
-        // Comparing the bitrates to preserve the higher quality track
-        if (firstTrack.BitRate < secondTrack.BitRate) {
-          goodTrack = secondTrack;
-          badTrack = firstTrack;
+        Map<String, Object?>? secondTrackMap = (await db.query('tracks',
+                    where: 'TrackID = ?',
+                    whereArgs: [duplicateMap["secondTrackId"]]))
+                .firstOrNull ??
+            // Return the ID of the track that was not deleted in the first duplicateset that contained the track
+            (await db.query('tracks', where: 'TrackID = ?', whereArgs: [
+              duplicateIdsList
+                  .firstWhere((element) =>
+                      element.containsValue(duplicateMap['secondTrackId']))
+                  .entries
+                  .firstWhere((element) =>
+                      element.value != duplicateMap['secondTrackId'])
+                  .value
+            ]))
+                .firstOrNull;
+        if (firstTrackMap == null || secondTrackMap == null) {
+          // pass
         } else {
-          goodTrack = firstTrack;
-          badTrack = secondTrack;
-        }
+          Track firstTrack = Track.fromMap(firstTrackMap);
+          Track secondTrack = Track.fromMap(secondTrackMap);
 
-        // Retrieve hotcue info from both tracks
-        List<Map<String, Object?>> goodHotCueMapList = await db.query('''
+          Track goodTrack;
+          Track badTrack;
+
+          // Comparing the bitrates to preserve the higher quality track
+          if (firstTrack.BitRate < secondTrack.BitRate) {
+            goodTrack = secondTrack;
+            badTrack = firstTrack;
+          } else {
+            goodTrack = firstTrack;
+            badTrack = secondTrack;
+          }
+
+          // Retrieve hotcue info from both tracks
+          List<Map<String, Object?>> goodHotCueMapList = await db.query('''
         (SELECT * 
         FROM hotcues
         WHERE TrackID = ${goodTrack.TrackID}
         )
         ''');
 
-        List<Map<String, Object?>> badHotCueMapList = await db.query('''
+          List<Map<String, Object?>> badHotCueMapList = await db.query('''
         (SELECT * 
         FROM hotcues
         WHERE TrackID = ${badTrack.TrackID}
         )
         ''');
 
-        List<Hotcue> goodHotCueList = goodHotCueMapList.map((hotcuemap) {
-          return Hotcue.fromMap(hotcuemap);
-        }).toList();
+          List<Hotcue> goodHotCueList = goodHotCueMapList.map((hotcuemap) {
+            return Hotcue.fromMap(hotcuemap);
+          }).toList();
 
-        List<Hotcue> badHotCueList = badHotCueMapList.map((hotcuemap) {
-          return Hotcue.fromMap(hotcuemap);
-        }).toList();
+          List<Hotcue> badHotCueList = badHotCueMapList.map((hotcuemap) {
+            return Hotcue.fromMap(hotcuemap);
+          }).toList();
 
-        // Function checks if there is not already a cue of the same type and around the same time in the track
-        bool cuesOfSameTypeAndNearEachother(
-            Hotcue firstHotcue, Hotcue secondHotcue) {
-          int firstHotcueStart = firstHotcue.Start as int;
-          int secondHotcueStart = secondHotcue.Start as int;
-          int distanceBetweenHotcues =
-              (firstHotcueStart - secondHotcueStart).abs();
+          // Function checks if there is not already a cue of the same type and around the same time in the track
+          bool cuesOfSameTypeAndNearEachother(
+              Hotcue firstHotcue, Hotcue secondHotcue) {
+            double firstHotcueStart = double.parse(firstHotcue.Start);
+            double secondHotcueStart = double.parse(secondHotcue.Start);
+            double distanceBetweenHotcues =
+                (firstHotcueStart - secondHotcueStart).abs();
 
-          return firstHotcue.Type == secondHotcue.Type &&
-              distanceBetweenHotcues < 2;
-        }
+            return firstHotcue.Type == secondHotcue.Type &&
+                distanceBetweenHotcues < 2;
+          }
 
-        // Merge hotcues
-        for (Hotcue badHotCue in badHotCueList) {
-          // Hotcues and memorycues
-          if (badHotCue.Type == '0') {
-            // Hotcues have number != -1
-            if (badHotCue.Num != '-1' &&
-                !goodHotCueList.any((Hotcue goodHotcue) {
-                  // If the goodhotcuelist doesn't already have a hotcue similar to the proposed badhotcue...
-                  return goodHotcue.Num != '-1' &&
-                      cuesOfSameTypeAndNearEachother(goodHotcue, badHotCue);
-                })) {
-              // ... have goodhotcuelist adopt badhotcue and correct the id
-              badHotCue.TrackID = goodTrack.TrackID;
-              goodHotCueList.add(badHotCue);
-            } else if (badHotCue.Num == '-1' &&
-                !goodHotCueList.any((Hotcue goodHotcue) {
-                  return goodHotcue.Num == '-1' &&
-                      cuesOfSameTypeAndNearEachother(goodHotcue, badHotCue);
-                })) {
+          // Merge hotcues
+          for (Hotcue badHotCue in badHotCueList) {
+            // Hotcues and memorycues
+            if (badHotCue.Type == '0') {
+              // Hotcues have number != -1
+              if (badHotCue.Num != '-1' &&
+                  !goodHotCueList.any((Hotcue goodHotcue) {
+                    // If the goodhotcuelist doesn't already have a hotcue similar to the proposed badhotcue...
+                    return goodHotcue.Num != '-1' &&
+                        cuesOfSameTypeAndNearEachother(goodHotcue, badHotCue);
+                  })) {
+                // ... have goodhotcuelist adopt badhotcue and correct the id
+                badHotCue.TrackID = goodTrack.TrackID;
+                goodHotCueList.add(badHotCue);
+              } else if (badHotCue.Num == '-1' &&
+                  !goodHotCueList.any((Hotcue goodHotcue) {
+                    return goodHotcue.Num == '-1' &&
+                        cuesOfSameTypeAndNearEachother(goodHotcue, badHotCue);
+                  })) {
+                badHotCue.TrackID = goodTrack.TrackID;
+                goodHotCueList.add(badHotCue);
+              }
+            } else if (!goodHotCueList.any((Hotcue goodHotCue) {
+              return cuesOfSameTypeAndNearEachother(goodHotCue, badHotCue);
+            })) {
               badHotCue.TrackID = goodTrack.TrackID;
               goodHotCueList.add(badHotCue);
             }
-          } else if (!goodHotCueList.any((Hotcue goodHotCue) {
-            return cuesOfSameTypeAndNearEachother(goodHotCue, badHotCue);
-          })) {
-            badHotCue.TrackID = goodTrack.TrackID;
-            goodHotCueList.add(badHotCue);
+          }
+
+          // Sort cues by starting time
+          goodHotCueList.sort((firstCue, secondCue) {
+            double firstCueStart = double.parse(firstCue.Start);
+            double secondCueStart = double.parse(secondCue.Start);
+            return firstCueStart.compareTo(secondCueStart);
+          });
+
+          // RGB values taken from own RGB colored collection
+          // TODO: make this dependent on colorscheme found in XML?
+          Map<String, RGB> hotcueNumberToColorMap = {
+            '0': RGB("255", "55", "111"),
+            '1': RGB("69", "172", "219"),
+            '2': RGB("125", "193", "61"),
+            '3': RGB("170", "114", "255"),
+            '4': RGB("48", "210", "110"),
+            '5': RGB("224", "100", "27"),
+            '6': RGB("48", "90", "255"),
+            '7': RGB("195", "175", "4")
+          };
+
+          int goodHotCueListLength = goodHotCueList.length;
+
+          // Number to keep track of hotcues and assign correct number
+          int hotcueNumber = 0;
+
+          // Loop to renumber the hotcues to avoid duplicate cue numbers due to merging
+          for (int i = 0; i < goodHotCueListLength; i++) {
+            Hotcue hotcue = goodHotCueList[i];
+
+            // Memory cues have static number '-1' and must be skipped
+            if (hotcue.Num != '-1') {
+              hotcue.Num = hotcueNumber.toString();
+
+              // Assign to preset RGB if cuenumber in RGB map, else set to original RGB
+              RGB hotcueRGB = hotcueNumberToColorMap[hotcue.Num] ??
+                  RGB(hotcue.Red, hotcue.Green, hotcue.Blue);
+
+              // Assign colors to cue
+              hotcue.Red = hotcueRGB.red;
+              hotcue.Green = hotcueRGB.green;
+              hotcue.Blue = hotcueRGB.blue;
+
+              // Increase hotcuenumber to correctly assign next found hotcue
+              hotcueNumber++;
+            }
+          }
+
+          // Start a new batch
+          Batch batch = db.batch();
+
+          // Replacing bad track playlist entries with good tracks
+          batch.update('playlisttracks', {'TrackID': goodTrack.TrackID},
+              where: 'TrackID = ?', whereArgs: [badTrack.TrackID]);
+
+          // Removing old hotcues
+          batch.delete('hotcues',
+              where: 'TrackID = ? or TrackID = ?',
+              whereArgs: [goodTrack.TrackID, badTrack.TrackID]);
+
+          // Inserting new hotcues
+          for (Hotcue hotcue in goodHotCueList) {
+            batch.insert('hotcues', hotcue.toMap());
+          }
+
+          // Deleting the remaining bad track entries in the database
+          batch.delete('tracks',
+              where: 'TrackID = ?', whereArgs: [badTrack.TrackID]);
+          batch.delete('tempos',
+              where: 'TrackID = ?', whereArgs: [badTrack.TrackID]);
+          batch.commit();
+
+          // Deleting the corresponding badtrack file
+          final File duplicateTrackFile = File(badTrack.Location);
+          if (duplicateTrackFile.existsSync()) {
+            duplicateTrackFile.deleteSync();
+            print("Track with id: ${badTrack.TrackID} deleted...");
           }
         }
-
-        // Sort cues by starting time
-        goodHotCueList.sort((firstCue, secondCue) {
-          int firstCueStart = firstCue.Start as int;
-          int secondCueStart = secondCue.Start as int;
-          return firstCueStart.compareTo(secondCueStart);
-        });
-
-        // RGB values taken from own RGB colored collection
-        // TODO: make this dependent on colorscheme found in XML
-        Map<String, RGB> hotcueNumberToColorMap = {
-          '0': RGB("255", "55", "111"),
-          '1': RGB("69", "172", "219"),
-          '2': RGB("125", "193", "61"),
-          '3': RGB("170", "114", "255"),
-          '4': RGB("48", "210", "110"),
-          '5': RGB("224", "100", "27"),
-          '6': RGB("48", "90", "255"),
-          '7': RGB("195", "175", "4")
-        };
-
-        int goodHotCueListLength = goodHotCueList.length;
-
-        // Number to keep track of hotcues and assign correct number
-        int hotcueNumber = 0;
-
-        // Loop to renumber the hotcues to avoid duplicate cue numbers due to merging
-        for (int i = 0; i < goodHotCueListLength; i++) {
-          Hotcue hotcue = goodHotCueList[i];
-
-          // Memory cues have static number '-1' and must be skipped
-          if (hotcue.Num != '-1') {
-            hotcue.Num = hotcueNumber.toString();
-
-            // Assign to preset RGB if cuenumber in RGB map, else set to original RGB
-            RGB hotcueRGB = hotcueNumberToColorMap[hotcue.Num] ??
-                RGB(hotcue.Red, hotcue.Green, hotcue.Blue);
-
-            // Assign colors to cue
-            hotcue.Red = hotcueRGB.red;
-            hotcue.Green = hotcueRGB.green;
-            hotcue.Blue = hotcueRGB.blue;
-
-            // Increase hotcuenumber to correctly assign next found hotcue
-            hotcueNumber++;
-          }
-        }
-
-        // Start a new batch
-        Batch batch = db.batch();
-
-        // Replacing bad track playlist entries with good tracks
-        batch.update('playlisttracks', {'trackid': goodTrack.TrackID},
-            where: 'trackid = ?', whereArgs: [badTrack.TrackID]);
-
-        // Removing old hotcues
-        batch.delete('hotcues',
-            where: 'trackid = ? or trackid = ?',
-            whereArgs: [goodTrack.TrackID, badTrack.TrackID]);
-
-        // Inserting new hotcues
-        for (Hotcue hotcue in goodHotCueList) {
-          batch.insert('hotcues', hotcue.toMap());
-        }
-
-        // Deleting the remaining bad track entries in the database
-        batch.delete('tracks', where: 'id = ?', whereArgs: [badTrack.TrackID]);
-        batch.delete('tempos',
-            where: 'trackid = ?', whereArgs: [badTrack.TrackID]);
-        batch.commit();
-
-        // Deleting the corresponding badtrack file
-        final File duplicateTrackFile = File(badTrack.Location);
-        duplicateTrackFile.deleteSync();
-        print("Track with id: ${badTrack.TrackID} deleted...");
       }
     }
 
@@ -922,6 +956,7 @@ Create TABLE playlistfolders (
 
       final newXML = builder.buildDocument();
 
+      // TODO: the database starts locking here due to not using transaction object. FIX
       void addTrackElement(
           XmlDocument document, XmlBuilder builder, Track track) async {
         builder.element('TRACK', attributes: track.toXmlMap());
@@ -955,11 +990,12 @@ Create TABLE playlistfolders (
       }
 
       // Obtaining list of all tracks
-      List<Map<String, String>> trackMapList =
-          (await db.query('tracks')).toList().cast<Map<String, String>>();
+      List<Map<String, dynamic>> trackMapList = (await db.query('tracks'))
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
 
       // Adding track node with hotcues and tempo children nodes
-      for (Map<String, String> trackMap in trackMapList) {
+      for (Map<String, dynamic> trackMap in trackMapList) {
         Track track = Track.fromMap(trackMap);
         addTrackElement(newXML, builder, track);
       }
@@ -975,9 +1011,10 @@ Create TABLE playlistfolders (
                   element.getAttribute('Name') == playlistFolder.ParentName)
               .children
               .add(builder.buildFragment());
+
           List<Map<String, Object?>> newPlaylistFolderMapList = (await db.query(
               'playlistfolders',
-              where: 'parentFolder = ?',
+              where: 'parentName = ?',
               whereArgs: [playlistFolder.Name]));
 
           List<PlaylistFolder> newPlaylistFolderList = newPlaylistFolderMapList
@@ -999,11 +1036,56 @@ Create TABLE playlistfolders (
 
       await addPlaylistFolders(rootPlaylistFolderList, builder, newXML);
 
-      // TODO: find playlists type 1, find tracks belonging to and add
-      // Future<void> addPlaylistTracks() {}
+      // Function to add the playlists
+      Future<void> addPlaylists(XmlDocument xmlDocument) async {
+        final builder = XmlBuilder();
+        List<Playlist> playlists = (await db.query('playlists'))
+            .map((e) => Playlist.fromMap(e))
+            .toList();
+
+        for (Playlist playlist in playlists) {
+          // Create a NODE xmlelement for the playlist
+          builder.element('NODE', attributes: playlist.toXmlMap());
+          xmlDocument
+              .findAllElements('NODE')
+              .singleWhere((element) =>
+                  element.getAttribute('Name') == playlist.FolderName)
+              .children
+              .add(builder.buildFragment());
+
+          // Find the corresponding tracks and list them
+          List<PlaylistTrack> playlistTracks = (await db.query('playlisttracks',
+                  where: 'PlaylistName = ?', whereArgs: [playlist.Name]))
+              .map((e) => PlaylistTrack.fromMap(e))
+              .toList();
+
+          // Add all tracks to the playlistnode
+          for (PlaylistTrack playlistTrack in playlistTracks) {
+            builder.element('TRACK', attributes: playlistTrack.toXmlMap());
+
+            XmlElement playlistNode = xmlDocument
+                .findAllElements('NODE')
+                .singleWhere(
+                    (element) => element.getAttribute('Name') == playlist.Name);
+            playlistNode.children.add(builder.buildFragment());
+
+            // Correct the Entries counter
+            int playlistEntries = playlistNode.children.length;
+            playlistNode.setAttribute('Entries', playlistEntries.toString());
+          }
+        }
+      }
+
+      await addPlaylists(newXML);
+
+      final File newXmlFile =
+          File('${getDownloadsDirectory()}cleanCollection.xml');
+      newXmlFile.writeAsStringSync(newXML.toXmlString(pretty: true));
+      print('File saved to ${newXmlFile.path}');
     }
 
     await tracksToDatabase();
+    playlistFoldersToDatabase();
     await playlistsToDatabase();
     print("Database saved at ${db.path}");
     await mergeDuplicates(await findDuplicateIds());

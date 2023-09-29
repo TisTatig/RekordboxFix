@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'dart:core';
 import 'package:xml/xml.dart';
 import 'dart:io';
@@ -38,15 +40,15 @@ Future<void> createXML(List<String> paths) async {
         String fakeTrackLocation =
             "$scriptDirectory/testTracks/Track$trackCounter";
         File fakeTrack = File(fakeTrackLocation);
-        fakeTrack.createSync();
-
+        if (!(await fakeTrack.exists())) {
+          fakeTrack.createSync();
+        }
         track.setAttribute("Location", fakeTrackLocation);
-
         trackCounter++;
       }
 
       String newTextXMLLocation =
-          "$scriptDirectory/testXMLs/testXML$xmlCounter";
+          "$scriptDirectory/testXMLs/testXML$xmlCounter.xml";
       File newTestXML = File(newTextXMLLocation);
 
       newTestXML.createSync();
