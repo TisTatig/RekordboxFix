@@ -956,140 +956,151 @@ Create TABLE playlistfolders (
 
       final newXML = builder.buildDocument();
 
-      // TODO: the database starts locking here due to not using transaction object. FIX
-      void addTrackElement(
-          XmlDocument document, XmlBuilder builder, Track track) async {
-        builder.element('TRACK', attributes: track.toXmlMap());
-        XmlElement collection = document.findAllElements('COLLECTION').first;
-        collection.children.add(builder.buildFragment());
+      // TODO: red green blue doesnt work for memory cues and millions of tempo gets added and playlisttracks dont get added
+      await db.transaction((txn) async {
+        void addTrackElement(
+            XmlDocument document, XmlBuilder builder, Track track) async {
+          builder.element('TRACK', attributes: track.toXmlMap());
+          XmlElement collection = document.findAllElements('COLLECTION').first;
+          collection.children.add(builder.buildFragment());
 
-        // Find the built track element in the xml for further additions
-        XmlElement xmlTrack = document
-            .findAllElements('TRACK')
-            .where((element) =>
-                element.getAttribute("TrackID") == track.TrackID.toString())
-            .first;
+          // Find the built track element in the xml for further additions
+          XmlElement xmlTrack = document
+              .findAllElements('TRACK')
+              .where((element) =>
+                  element.getAttribute("TrackID") == track.TrackID.toString())
+              .first;
 
-        // Adding tempo nodes to track element
-        List<Map<String, Object?>> tempoMapList = await db
-            .query('tempos', where: 'TrackID = ?', whereArgs: [track.TrackID]);
-        for (Map<String, Object?> tempoMapObject in tempoMapList) {
-          Tempo tempo = Tempo.fromMap(tempoMapObject);
-          builder.element('TEMPO', attributes: tempo.toXmlMap());
-          xmlTrack.children.add(builder.buildFragment());
-        }
+          // Adding tempo nodes to track element
+          List<Map<String, Object?>> tempoMapList = await txn.query('tempos',
+              where: 'TrackID = ?', whereArgs: [track.TrackID]);
+          for (Map<String, Object?> tempoMapObject in tempoMapList) {
+            Tempo tempo = Tempo.fromMap(tempoMapObject);
+            builder.element('TEMPO', attributes: tempo.toXmlMap());
+            xmlTrack.children.add(builder.buildFragment());
+          }
 
-        // Adding hotcue nodes to track element
-        List<Map<String, Object?>> hotcueMapList = await db
-            .query('hotcues', where: 'TrackID = ?', whereArgs: [track.TrackID]);
-        for (Map<String, Object?> hotcueMapObject in hotcueMapList) {
-          Hotcue hotcue = Hotcue.fromMap(hotcueMapObject);
-          builder.element('POSITION_MARK', attributes: hotcue.toXmlMap());
-          xmlTrack.children.add(builder.buildFragment());
-        }
-      }
-
-      // Obtaining list of all tracks
-      List<Map<String, dynamic>> trackMapList = (await db.query('tracks'))
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-
-      // Adding track node with hotcues and tempo children nodes
-      for (Map<String, dynamic> trackMap in trackMapList) {
-        Track track = Track.fromMap(trackMap);
-        addTrackElement(newXML, builder, track);
-      }
-
-      // Adds playlist folders recursively looking for folders that have the added folders as parent
-      Future<void> addPlaylistFolders(List<PlaylistFolder> playlistFolderList,
-          XmlBuilder builder, XmlDocument xmlDocument) async {
-        for (PlaylistFolder playlistFolder in playlistFolderList) {
-          builder.element('NODE', attributes: playlistFolder.toXmlMap());
-          xmlDocument
-              .findAllElements("NODE")
-              .singleWhere((element) =>
-                  element.getAttribute('Name') == playlistFolder.ParentName)
-              .children
-              .add(builder.buildFragment());
-
-          List<Map<String, Object?>> newPlaylistFolderMapList = (await db.query(
-              'playlistfolders',
-              where: 'parentName = ?',
-              whereArgs: [playlistFolder.Name]));
-
-          List<PlaylistFolder> newPlaylistFolderList = newPlaylistFolderMapList
-              .map((e) => PlaylistFolder.fromMap(e))
-              .toList();
-
-          addPlaylistFolders(newPlaylistFolderList, builder, xmlDocument);
-        }
-      }
-
-      List<Map<String, Object?>> rootPlaylistFolderMapList = (await db.query(
-          'playlistfolders',
-          where: 'parentName = ?',
-          whereArgs: ['ROOT']));
-
-      List<PlaylistFolder> rootPlaylistFolderList = rootPlaylistFolderMapList
-          .map((e) => PlaylistFolder.fromMap(e))
-          .toList();
-
-      await addPlaylistFolders(rootPlaylistFolderList, builder, newXML);
-
-      // Function to add the playlists
-      Future<void> addPlaylists(XmlDocument xmlDocument) async {
-        final builder = XmlBuilder();
-        List<Playlist> playlists = (await db.query('playlists'))
-            .map((e) => Playlist.fromMap(e))
-            .toList();
-
-        for (Playlist playlist in playlists) {
-          // Create a NODE xmlelement for the playlist
-          builder.element('NODE', attributes: playlist.toXmlMap());
-          xmlDocument
-              .findAllElements('NODE')
-              .singleWhere((element) =>
-                  element.getAttribute('Name') == playlist.FolderName)
-              .children
-              .add(builder.buildFragment());
-
-          // Find the corresponding tracks and list them
-          List<PlaylistTrack> playlistTracks = (await db.query('playlisttracks',
-                  where: 'PlaylistName = ?', whereArgs: [playlist.Name]))
-              .map((e) => PlaylistTrack.fromMap(e))
-              .toList();
-
-          // Add all tracks to the playlistnode
-          for (PlaylistTrack playlistTrack in playlistTracks) {
-            builder.element('TRACK', attributes: playlistTrack.toXmlMap());
-
-            XmlElement playlistNode = xmlDocument
-                .findAllElements('NODE')
-                .singleWhere(
-                    (element) => element.getAttribute('Name') == playlist.Name);
-            playlistNode.children.add(builder.buildFragment());
-
-            // Correct the Entries counter
-            int playlistEntries = playlistNode.children.length;
-            playlistNode.setAttribute('Entries', playlistEntries.toString());
+          // Adding hotcue nodes to track element
+          List<Map<String, Object?>> hotcueMapList = await txn.query('hotcues',
+              where: 'TrackID = ?', whereArgs: [track.TrackID]);
+          for (Map<String, Object?> hotcueMapObject in hotcueMapList) {
+            Hotcue hotcue = Hotcue.fromMap(hotcueMapObject);
+            builder.element('POSITION_MARK', attributes: hotcue.toXmlMap());
+            xmlTrack.children.add(builder.buildFragment());
           }
         }
-      }
 
-      await addPlaylists(newXML);
+        // Obtaining list of all tracks
+        List<Map<String, dynamic>> trackMapList = (await txn.query('tracks'))
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
 
-      final File newXmlFile =
-          File('${getDownloadsDirectory()}cleanCollection.xml');
-      newXmlFile.writeAsStringSync(newXML.toXmlString(pretty: true));
-      print('File saved to ${newXmlFile.path}');
+        // Adding track node with hotcues and tempo children nodes
+        for (Map<String, dynamic> trackMap in trackMapList) {
+          Track track = Track.fromMap(trackMap);
+          addTrackElement(newXML, builder, track);
+        }
+
+        // Adds playlist folders recursively looking for folders that have the added folders as parent
+        Future<void> addPlaylistFolders(List<PlaylistFolder> playlistFolderList,
+            XmlBuilder builder, XmlDocument xmlDocument) async {
+          for (PlaylistFolder playlistFolder in playlistFolderList) {
+            builder.element('NODE', attributes: playlistFolder.toXmlMap());
+            xmlDocument
+                .findAllElements("NODE")
+                .singleWhere((element) =>
+                    element.getAttribute('Name') == playlistFolder.ParentName)
+                .children
+                .add(builder.buildFragment());
+
+            List<Map<String, Object?>> newPlaylistFolderMapList = (await txn
+                .query('playlistfolders',
+                    where: 'parentName = ?', whereArgs: [playlistFolder.Name]));
+
+            List<PlaylistFolder> newPlaylistFolderList =
+                newPlaylistFolderMapList
+                    .map((e) => PlaylistFolder.fromMap(e))
+                    .toList();
+
+            addPlaylistFolders(newPlaylistFolderList, builder, xmlDocument);
+          }
+        }
+
+        List<Map<String, Object?>> rootPlaylistFolderMapList = (await txn.query(
+            'playlistfolders',
+            where: 'parentName = ?',
+            whereArgs: ['ROOT']));
+
+        List<PlaylistFolder> rootPlaylistFolderList = rootPlaylistFolderMapList
+            .map((e) => PlaylistFolder.fromMap(e))
+            .toList();
+
+        await addPlaylistFolders(rootPlaylistFolderList, builder, newXML);
+
+        // Function to add the playlists
+        Future<void> addPlaylists(XmlDocument xmlDocument) async {
+          final builder = XmlBuilder();
+          List<Playlist> playlists = (await txn.query('playlists'))
+              .map((e) => Playlist.fromMap(e))
+              .toList();
+
+          for (Playlist playlist in playlists) {
+            // Create a NODE xmlelement for the playlist
+            builder.element('NODE', attributes: playlist.toXmlMap());
+            xmlDocument
+                .findAllElements('NODE')
+                .singleWhere((element) =>
+                    element.getAttribute('Name') == playlist.FolderName)
+                .children
+                .add(builder.buildFragment());
+
+            // Find the corresponding tracks and list them
+            List<PlaylistTrack> playlistTracks = (await txn.query(
+                    'playlisttracks',
+                    where: 'PlaylistName = ?',
+                    whereArgs: [playlist.Name]))
+                .map((e) => PlaylistTrack.fromMap(e))
+                .toList();
+
+            // Add all tracks to the playlistnode
+            for (PlaylistTrack playlistTrack in playlistTracks) {
+              builder.element('TRACK', attributes: playlistTrack.toXmlMap());
+
+              XmlElement playlistNode = xmlDocument
+                  .findAllElements('NODE')
+                  .singleWhere((element) =>
+                      element.getAttribute('Name') == playlist.Name);
+              playlistNode.children.add(builder.buildFragment());
+
+              // Correct the Entries counter
+              int playlistEntries = playlistNode.children.length;
+              playlistNode.setAttribute('Entries', playlistEntries.toString());
+            }
+          }
+        }
+
+        await addPlaylists(newXML);
+
+        final Directory? newFileDirectory = await getDownloadsDirectory();
+        if (newFileDirectory == null) {
+          throw Exception('Downloads directory not found');
+        }
+        final String newFilePath =
+            '${newFileDirectory.path}/cleanCollection.xml';
+
+        final File newXmlFile = File(newFilePath);
+        newXmlFile.writeAsStringSync(newXML.toXmlString(pretty: true));
+        print('File saved to ${newXmlFile.path}');
+      });
     }
 
     await tracksToDatabase();
-    playlistFoldersToDatabase();
+    await playlistFoldersToDatabase();
     await playlistsToDatabase();
     print("Database saved at ${db.path}");
     await mergeDuplicates(await findDuplicateIds());
     await buildNewXml();
+
     await db.close();
   }
 }
