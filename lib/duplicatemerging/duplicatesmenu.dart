@@ -257,6 +257,15 @@ class Hotcue {
       'Blue': Blue,
     };
   }
+
+  Map<String, String> memoryCueToXmlMap() {
+    return {
+      'Name': Name,
+      'Type': Type,
+      'Start': Start,
+      'Num': Num,
+    };
+  }
 }
 
 class Tempo {
@@ -956,7 +965,7 @@ Create TABLE playlistfolders (
 
       final newXML = builder.buildDocument();
 
-      // TODO: red green blue doesnt work for memory cues and millions of tempo gets added and playlisttracks dont get added
+      // TODO(TisTatig): red green blue doesnt work for memory cues and millions of tempo gets added and playlisttracks dont get added
       await db.transaction((txn) async {
         void addTrackElement(
             XmlDocument document, XmlBuilder builder, Track track) async {
@@ -985,7 +994,12 @@ Create TABLE playlistfolders (
               where: 'TrackID = ?', whereArgs: [track.TrackID]);
           for (Map<String, Object?> hotcueMapObject in hotcueMapList) {
             Hotcue hotcue = Hotcue.fromMap(hotcueMapObject);
-            builder.element('POSITION_MARK', attributes: hotcue.toXmlMap());
+            if (hotcue.Num == "-1") {
+              builder.element('POSITION_MARK',
+                  attributes: hotcue.memoryCueToXmlMap());
+            } else {
+              builder.element('POSITION_MARK', attributes: hotcue.toXmlMap());
+            }
             xmlTrack.children.add(builder.buildFragment());
           }
         }
@@ -1102,5 +1116,9 @@ Create TABLE playlistfolders (
     await buildNewXml();
 
     await db.close();
+
+    // Delete the database to prevent database pollution between sessions
+    final File databaseFile = File(db.path);
+    databaseFile.deleteSync();
   }
 }
