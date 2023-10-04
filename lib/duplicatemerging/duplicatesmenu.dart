@@ -4,7 +4,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as path;
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path_provider/path_provider.dart';
@@ -76,7 +76,7 @@ class _DuplicatesMenuState extends State<DuplicatesMenu> {
     String databaseDirectoryPath = databaseDirectory.path;
 
     final database = openDatabase(
-      join(databaseDirectoryPath, 'track_database.db'),
+      path.join(databaseDirectoryPath, 'track_database.db'),
       onCreate: (db, version) {
         return db.execute('''CREATE TABLE tracks(
             TrackID INTEGER PRIMARY KEY, 
@@ -508,16 +508,15 @@ Create TABLE playlistfolders (
           .toString();
 
       final builder = XmlBuilder();
-      builder.processing('xml', 'version="1.0"');
+      builder.processing('xml', 'version="1.0" encoding="UTF-8"');
       builder.element("DJ_PLAYLISTS", nest: () {
         builder.attribute('Version', "1.0.0");
         builder.element("PRODUCT", attributes: {
           'Name': productName,
           'Version': productVersion,
           'Company': productCompany
-        }, nest: () {
-          builder.element('COLLECTION', attributes: {'Entries': trackCount});
         });
+        builder.element('COLLECTION', attributes: {'Entries': trackCount});
         builder.element('PLAYLISTS', nest: () {
           builder.element('NODE',
               attributes: {'Type': '0', 'Name': 'ROOT', 'Count': ''});
@@ -667,9 +666,14 @@ Create TABLE playlistfolders (
           throw Exception('Downloads directory not found');
         }
         final String newFilePath =
-            '${newFileDirectory.path}/cleanCollection.xml';
+            path.join(newFileDirectory.path, 'cleanCollection.xml');
 
         final File newXmlFile = File(newFilePath);
+
+        // Prevent subsequent sessions from appending to same xml
+        if (newXmlFile.existsSync()) {
+          newXmlFile.deleteSync();
+        }
         newXmlFile.writeAsStringSync(newXML.toXmlString(pretty: true));
         logger.i('File saved to ${newXmlFile.path}');
       });

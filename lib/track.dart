@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'package:xml/xml.dart';
+import 'package:path/path.dart' as path;
 
 class Track {
   int TrackID;
@@ -168,7 +169,7 @@ class Track {
       'Comments': Comments,
       'PlayCount': PlayCount.toString(),
       'Rating': Rating,
-      'Location': Location,
+      'Location': 'file://localhost/$Location',
       'Remixer': Remixer,
       'Tonality': Tonality,
       'Label': Label,

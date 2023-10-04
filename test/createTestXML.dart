@@ -4,6 +4,7 @@ import 'dart:core';
 import 'package:xml/xml.dart';
 import 'dart:io';
 import 'package:args/args.dart';
+import 'package:path/path.dart' as path;
 
 const lineNumber = 'line-number';
 String scriptPath = Platform.script.toFilePath();
@@ -24,8 +25,8 @@ Future<void> createXML(List<String> paths) async {
     print("Correct usage: dart run ./createTestXML.dart pathToCollectionXML");
   } else {
     int xmlCounter = 1;
-    for (final path in paths) {
-      File file = File(path);
+    for (final filePath in paths) {
+      File file = File(filePath);
       XmlDocument document = XmlDocument.parse(file.readAsStringSync());
 
       List<XmlElement> xmlTracks = document
@@ -38,7 +39,7 @@ Future<void> createXML(List<String> paths) async {
 
       for (XmlElement track in xmlTracks) {
         String fakeTrackLocation =
-            "$scriptDirectory/testTracks/Track$trackCounter.mp3";
+            path.join(scriptDirectory, 'testTracks', 'Track$trackCounter.mp3');
         File fakeTrack = File(fakeTrackLocation);
         if (!(await fakeTrack.exists())) {
           fakeTrack.createSync();
@@ -48,7 +49,8 @@ Future<void> createXML(List<String> paths) async {
       }
 
       String newTextXMLLocation =
-          "$scriptDirectory/testXMLs/testXML$xmlCounter.xml";
+          path.join(scriptDirectory, 'testXMLs', 'testXML$xmlCounter.xml');
+
       File newTestXML = File(newTextXMLLocation);
 
       newTestXML.createSync();
