@@ -9,6 +9,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:core';
+import 'package:logger/logger.dart';
 
 import '/track.dart';
 import '/hotcue.dart';
@@ -17,6 +18,9 @@ import '/playlist.dart';
 import '/playlist_folder.dart';
 import '/playlist_track.dart';
 import '/r_g_b.dart';
+
+// Setting up the logger
+var logger = Logger(level: Level.info);
 
 class DuplicatesMenu extends StatefulWidget {
   const DuplicatesMenu({
@@ -134,9 +138,9 @@ CREATE TABLE playlists (
 
 CREATE TABLE playlisttracks (
   PlaylistName TEXT,
-  TrackID INTEGER,
+  Key INTEGER,
   FOREIGN KEY (PlaylistName) REFERENCES playlists(Name),
-  FOREIGN KEY (TrackID) REFERENCES tracks(TrackID)
+  FOREIGN KEY (Key) REFERENCES tracks(TrackID)
 );
 
 Create TABLE playlistfolders (
@@ -192,13 +196,13 @@ Create TABLE playlistfolders (
             batch.insert('hotcues', hotcue.toMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
           }
-          print(
+          logger.d(
               "Track ${collectionTracks.indexOf(xmlTrack)} added to the batch");
         }
 
         // Committing batch to database
         await batch.commit();
-        print("Track batch committed to database");
+        logger.i("Track batch committed to database");
       });
     }
 
@@ -253,7 +257,7 @@ Create TABLE playlistfolders (
               conflictAlgorithm: ConflictAlgorithm.replace);
 
           // Finding and parsing the playlisttracks
-          xmlPlaylist.findAllElements("Track").forEach((element) {
+          xmlPlaylist.findAllElements("TRACK").forEach((element) {
             PlaylistTrack playlistTrack =
                 PlaylistTrack.fromXmlElement(playlist, element);
 
@@ -261,7 +265,7 @@ Create TABLE playlistfolders (
             batch.insert('playlisttracks', playlistTrack.toMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
           });
-          print(
+          logger.d(
               "Playlist ${playlistList.indexOf(xmlPlaylist)} added to the batch");
         }
 
@@ -282,11 +286,14 @@ Create TABLE playlistfolders (
         ''');
       List<Map<String, dynamic>> duplicateIds =
           duplicateIdsQuery.map((e) => Map<String, dynamic>.from(e)).toList();
+
+      logger.i('${duplicateIds.length} duplicate pairs found');
       return duplicateIds;
     }
 
     Future<void> mergeDuplicates(
         List<Map<String, dynamic>> duplicateIdsList) async {
+      logger.i('Merging duplicates');
       for (Map duplicateMap in duplicateIdsList) {
         Map<String, Object?>? firstTrackMap = (await db.query('tracks',
                     where: 'TrackID = ?',
@@ -455,8 +462,8 @@ Create TABLE playlistfolders (
           Batch batch = db.batch();
 
           // Replacing bad track playlist entries with good tracks
-          batch.update('playlisttracks', {'TrackID': goodTrack.TrackID},
-              where: 'TrackID = ?', whereArgs: [badTrack.TrackID]);
+          batch.update('playlisttracks', {'Key': goodTrack.TrackID},
+              where: 'Key = ?', whereArgs: [badTrack.TrackID]);
 
           // Removing old hotcues
           batch.delete('hotcues',
@@ -479,7 +486,7 @@ Create TABLE playlistfolders (
           final File duplicateTrackFile = File(badTrack.Location);
           if (duplicateTrackFile.existsSync()) {
             duplicateTrackFile.deleteSync();
-            print("Track with id: ${badTrack.TrackID} deleted...");
+            logger.d("Track with id: ${badTrack.TrackID} deleted...");
           }
         }
       }
@@ -634,11 +641,17 @@ Create TABLE playlistfolders (
             for (PlaylistTrack playlistTrack in playlistTracks) {
               builder.element('TRACK', attributes: playlistTrack.toXmlMap());
 
+              xmlDocument
+                  .findAllElements('NODE')
+                  .singleWhere((element) =>
+                      element.getAttribute('Name') == playlist.Name)
+                  .children
+                  .add(builder.buildFragment());
+
               XmlElement playlistNode = xmlDocument
                   .findAllElements('NODE')
                   .singleWhere((element) =>
                       element.getAttribute('Name') == playlist.Name);
-              playlistNode.children.add(builder.buildFragment());
 
               // Correct the Entries counter
               int playlistEntries = playlistNode.children.length;
@@ -658,15 +671,18 @@ Create TABLE playlistfolders (
 
         final File newXmlFile = File(newFilePath);
         newXmlFile.writeAsStringSync(newXML.toXmlString(pretty: true));
-        print('File saved to ${newXmlFile.path}');
+        logger.i('File saved to ${newXmlFile.path}');
       });
     }
 
+    logger.i('Building database...');
     await tracksToDatabase();
     await playlistFoldersToDatabase();
     await playlistsToDatabase();
-    print("Database saved at ${db.path}");
+
+    logger.i("Database saved at ${db.path}");
     await mergeDuplicates(await findDuplicateIds());
+    logger.i('Building xml...');
     await buildNewXml();
 
     await db.close();

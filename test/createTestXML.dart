@@ -38,7 +38,7 @@ Future<void> createXML(List<String> paths) async {
 
       for (XmlElement track in xmlTracks) {
         String fakeTrackLocation =
-            "$scriptDirectory/testTracks/Track$trackCounter";
+            "$scriptDirectory/testTracks/Track$trackCounter.mp3";
         File fakeTrack = File(fakeTrackLocation);
         if (!(await fakeTrack.exists())) {
           fakeTrack.createSync();
