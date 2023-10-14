@@ -291,6 +291,8 @@ Create TABLE playlistfolders (
       return duplicateIds;
     }
 
+    // TODO: Update metadata of tracks
+    // TODO: Retain artwork of tracks
     Future<void> mergeDuplicates(
         List<Map<String, dynamic>> duplicateIdsList) async {
       logger.i('Merging duplicates');
@@ -525,7 +527,6 @@ Create TABLE playlistfolders (
 
       final newXML = builder.buildDocument();
 
-      // TODO(TisTatig): red green blue doesnt work for memory cues and millions of tempo gets added and playlisttracks dont get added
       await db.transaction((txn) async {
         void addTrackElement(
             XmlDocument document, XmlBuilder builder, Track track) async {
