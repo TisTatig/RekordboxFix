@@ -2,6 +2,7 @@
 
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
@@ -10,6 +11,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:core';
 import 'package:logger/logger.dart';
+import 'package:audiotags/audiotags.dart';
 
 import '/track.dart';
 import '/hotcue.dart';
@@ -291,8 +293,6 @@ Create TABLE playlistfolders (
       return duplicateIds;
     }
 
-    // TODO: Update metadata of tracks
-    // TODO: Retain artwork of tracks
     Future<void> mergeDuplicates(
         List<Map<String, dynamic>> duplicateIdsList) async {
       logger.i('Merging duplicates');
@@ -489,6 +489,45 @@ Create TABLE playlistfolders (
           if (duplicateTrackFile.existsSync()) {
             duplicateTrackFile.deleteSync();
             logger.d("Track with id: ${badTrack.TrackID} deleted...");
+          }
+
+          // Fixing metadata
+          Tag? goodTrackTag = await AudioTags.read(goodTrack.Location);
+          Tag? badTrackTag = await AudioTags.read(badTrack.Location);
+          Tag newTag;
+
+          if (goodTrackTag == null) {
+            if (badTrackTag != null) {
+              AudioTags.write(goodTrack.Location, badTrackTag);
+            }
+          } else {
+            newTag = Tag(
+                title:
+                    goodTrack.Name.isNotEmpty ? goodTrack.Name : badTrack.Name,
+                trackArtist: goodTrack.Artist.isNotEmpty
+                    ? goodTrack.Artist
+                    : badTrack.Artist,
+                album: goodTrack.Album.isNotEmpty
+                    ? goodTrack.Album
+                    : badTrack.Album,
+                albumArtist:
+                    goodTrackTag.albumArtist ?? badTrackTag?.albumArtist,
+                genre: goodTrack.Genre.isNotEmpty
+                    ? goodTrack.Genre
+                    : badTrack.Genre,
+                year: goodTrack.Year != 0 ? goodTrack.Year : badTrack.Year,
+                trackNumber: goodTrack.TrackNumber != 0
+                    ? goodTrack.TrackNumber
+                    : badTrack.TrackNumber,
+                trackTotal: goodTrackTag.trackTotal ?? badTrackTag?.trackTotal,
+                discNumber: goodTrack.DiscNumber != 0
+                    ? goodTrack.DiscNumber
+                    : badTrack.DiscNumber,
+                discTotal: goodTrackTag.discTotal ?? badTrackTag?.discTotal,
+                pictures: goodTrackTag.pictures.isNotEmpty
+                    ? goodTrackTag.pictures
+                    : badTrackTag?.pictures ?? goodTrackTag.pictures);
+            AudioTags.write(goodTrack.Location, newTag);
           }
         }
       }
