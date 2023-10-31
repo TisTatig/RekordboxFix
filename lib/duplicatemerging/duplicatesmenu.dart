@@ -476,21 +476,7 @@ Create TABLE playlistfolders (
           for (Hotcue hotcue in goodHotCueList) {
             batch.insert('hotcues', hotcue.toMap());
           }
-
-          // Deleting the remaining bad track entries in the database
-          batch.delete('tracks',
-              where: 'TrackID = ?', whereArgs: [badTrack.TrackID]);
-          batch.delete('tempos',
-              where: 'TrackID = ?', whereArgs: [badTrack.TrackID]);
-          batch.commit();
-
-          // Deleting the corresponding badtrack file
-          final File duplicateTrackFile = File(badTrack.Location);
-          if (duplicateTrackFile.existsSync()) {
-            duplicateTrackFile.deleteSync();
-            logger.d("Track with id: ${badTrack.TrackID} deleted...");
-          }
-
+          
           // Fixing metadata
           Tag? goodTrackTag = await AudioTags.read(goodTrack.Location);
           Tag? badTrackTag = await AudioTags.read(badTrack.Location);
@@ -529,6 +515,22 @@ Create TABLE playlistfolders (
                     : badTrackTag?.pictures ?? goodTrackTag.pictures);
             AudioTags.write(goodTrack.Location, newTag);
           }
+          
+          // Deleting the remaining bad track entries in the database
+          batch.delete('tracks',
+              where: 'TrackID = ?', whereArgs: [badTrack.TrackID]);
+          batch.delete('tempos',
+              where: 'TrackID = ?', whereArgs: [badTrack.TrackID]);
+          batch.commit();
+
+          // Deleting the corresponding badtrack file
+          final File duplicateTrackFile = File(badTrack.Location);
+          if (duplicateTrackFile.existsSync()) {
+            duplicateTrackFile.deleteSync();
+            logger.d("Track with id: ${badTrack.TrackID} deleted...");
+          }
+
+          
         }
       }
     }
